@@ -19,11 +19,20 @@ import type { Student } from "@/types";
 type PaperSize = "A5" | "A4" | "A3";
 type CardsPerPage = 1 | 2 | 4;
 
-const VALID_CARDS_PER_PAGE: Record<PaperSize, CardsPerPage[]> = {
-  A5: [1],
-  A4: [1, 2],
-  A3: [2, 4],
-};
+interface PrintOption {
+  paperSize: PaperSize;
+  cpp: CardsPerPage;
+  label: string;
+  hint: string;
+}
+
+const PRINT_OPTIONS: PrintOption[] = [
+  { paperSize: "A5", cpp: 1, label: "A5 · 1/page",  hint: "Portrait — 1 full-size card" },
+  { paperSize: "A4", cpp: 1, label: "A4 · 1/page",  hint: "Portrait — 1 card centered on A4" },
+  { paperSize: "A4", cpp: 2, label: "A4 · 2/page",  hint: "Landscape — 2 cards side by side (cut in half)" },
+  { paperSize: "A3", cpp: 2, label: "A3 · 2/page",  hint: "Portrait — 2 full-size cards side by side" },
+  { paperSize: "A3", cpp: 4, label: "A3 · 4/page",  hint: "Portrait — 4 cards in a 2×2 grid" },
+];
 
 const CARD_W = 148; // mm
 const CARD_H = 210; // mm
@@ -68,15 +77,10 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [orderClosingDate, setOrderClosingDate] = useState<string>("");
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
-  const [paperSize, setPaperSize] = useState<PaperSize>("A5");
-  const [cardsPerPage, setCardsPerPage] = useState<CardsPerPage>(1);
+  const [printOptionIdx, setPrintOptionIdx] = useState(0);
   const printRef = useRef<HTMLDivElement>(null);
 
-  function handlePaperSizeChange(size: PaperSize) {
-    setPaperSize(size);
-    const valid = VALID_CARDS_PER_PAGE[size];
-    if (!valid.includes(cardsPerPage)) setCardsPerPage(valid[0]);
-  }
+  const { paperSize, cpp: cardsPerPage } = PRINT_OPTIONS[printOptionIdx];
 
   const { data: students, isLoading: studentsLoading } = useStudents(
     schoolId,
@@ -275,36 +279,27 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Paper size
+              Print layout
             </label>
-            <Select
-              value={paperSize}
-              onChange={(e) => handlePaperSizeChange(e.target.value as PaperSize)}
-              containerClassName="w-24"
-            >
-              <option value="A5">A5</option>
-              <option value="A4">A4</option>
-              <option value="A3">A3</option>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Cards per page
-            </label>
-            <Select
-              value={String(cardsPerPage)}
-              onChange={(e) => setCardsPerPage(Number(e.target.value) as CardsPerPage)}
-              containerClassName="w-36"
-            >
-              {VALID_CARDS_PER_PAGE[paperSize].map((n) => (
-                <option key={n} value={String(n)}>
-                  {n === 1 ? "1 per page" : `${n} per page`}
-                </option>
+            <div className="flex flex-wrap gap-1.5">
+              {PRINT_OPTIONS.map((opt, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPrintOptionIdx(i)}
+                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    printOptionIdx === i
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
               ))}
-            </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">{PRINT_OPTIONS[printOptionIdx].hint}</p>
           </div>
         </div>
 
