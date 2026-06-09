@@ -25,11 +25,7 @@ const ENDPOINTS = {
 } as const;
 
 /** Mock-only: passwords for protected albums (a real backend never exposes this to the client). */
-const MOCK_ALBUM_PASSWORDS: Record<string, string> = {
-  alb_riv_sports_track: "sports2026",
-  alb_oak_seniors_portraits: "seniors26",
-  alb_oak_drama_night: "showtime",
-};
+const MOCK_ALBUM_PASSWORDS: Record<string, string> = {};
 
 export const albumsService = {
   async listBySchool(schoolId: string, params: QueryParams & { classId?: string } = {}): Promise<PaginatedResponse<Album>> {
@@ -85,7 +81,7 @@ export const albumsService = {
       const album: Album = {
         id,
         schoolId,
-        coverImageUrl: `https://picsum.photos/seed/${id}/640/480`,
+        coverImageUrl: "",
         shareUrl: school ? routes.storefront.album(school.slug, id) : `/albums/${id}`,
         pricing: { priceListId: priceListId ?? null, currencyCode: school?.settings.currencyCode ?? "" },
         photoCount: 0,

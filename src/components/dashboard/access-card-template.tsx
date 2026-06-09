@@ -93,14 +93,14 @@ export function AccessCardTemplate({
         <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: 8, flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={student.coverPhotoUrl ?? "https://i.pravatar.cc/150?img=1"}
+            src={student.coverPhotoUrl ?? ""}
             alt={student.name}
             style={{ width: 70, height: 70, objectFit: "cover", border: "1px solid #ccc" }}
           />
           {/* Class cover as second photo */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={school.bannerUrl ?? "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=200&q=50"}
+            src={school.bannerUrl ?? ""}
             alt="Class photo"
             style={{ width: 70, height: 70, objectFit: "cover", border: "1px solid #ccc" }}
           />

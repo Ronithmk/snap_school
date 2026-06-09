@@ -12,78 +12,9 @@ import type {
 
 // ── In-memory mock stores ─────────────────────────────────────────
 
-const now = new Date().toISOString();
+let mockBlocks: ContentBlock[] = [];
 
-let mockBlocks: ContentBlock[] = [
-  {
-    id: "blk_riv_1",
-    schoolId: "sch_riverside",
-    type: "banner",
-    title: "📸 School Photos Are Ready!",
-    subtitle: "View and order your child's photos from our latest sessions.",
-    imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=70",
-    ctaLabel: "Browse Albums",
-    ctaUrl: "#albums",
-    priority: 0,
-    enabled: true,
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "blk_riv_2",
-    schoolId: "sch_riverside",
-    type: "announcement",
-    title: "Order deadline: June 30th",
-    body: "All print orders must be placed by June 30th to guarantee delivery before summer break.",
-    announcementStyle: "warning",
-    priority: 1,
-    enabled: true,
-    endsAt: "2026-06-30T23:59:59.000Z",
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "blk_riv_3",
-    schoolId: "sch_riverside",
-    type: "promotion",
-    title: "10% off this week",
-    body: "Use code SPRING10 at checkout for 10% off all print orders.",
-    ctaLabel: "Shop Now",
-    ctaUrl: "#albums",
-    announcementStyle: "promo",
-    priority: 2,
-    enabled: false,
-    endsAt: "2026-06-15T23:59:59.000Z",
-    createdAt: now,
-    updatedAt: now,
-  },
-];
-
-let mockRules: PricingRule[] = [
-  {
-    id: "rule_riv_1",
-    schoolId: "sch_riverside",
-    label: "Annual Day Discount",
-    type: "percent_off",
-    value: 15,
-    scope: "all",
-    enabled: true,
-    startsAt: "2026-06-01T00:00:00.000Z",
-    endsAt: "2026-06-30T23:59:59.000Z",
-    createdAt: now,
-  },
-  {
-    id: "rule_riv_2",
-    schoolId: "sch_riverside",
-    label: "Free Shipping on orders over ₹500",
-    type: "free_shipping",
-    value: 0,
-    scope: "all",
-    minOrderAmount: 500,
-    enabled: true,
-    createdAt: now,
-  },
-];
+let mockRules: PricingRule[] = [];
 
 // ── Content Blocks Service ────────────────────────────────────────
 

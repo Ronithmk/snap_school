@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  password     String
+  role         String       @default("school_admin")
+  avatarUrl    String?
+  schoolAdmins SchoolAdmin[]
+  createdAt    DateTime     @default(now())
+}
+
+model SchoolAdmin {
+  userId   String
+  schoolId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@id([userId, schoolId])
+}
+
+model School {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  logoUrl       String?
+  bannerUrl     String?
+  description   String?
+  status        String        @default("active")
+  settings      String        @default("{}") // JSON: SchoolSettings
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  admins        SchoolAdmin[]
+  classes       SchoolClass[]
+  albums        Album[]
+  students      Student[]
+  priceLists    PriceList[]
+  orders        Order[]
+  contentBlocks ContentBlock[]
+  pricingRules  PricingRule[]
+}
+
+model SchoolClass {
+  id           String    @id @default(cuid())
+  schoolId     String
+  name         String
+  slug         String
+  grouping     String?
+  studentCount Int?
+  priceListId  String?
+  createdAt    DateTime  @default(now())
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  students     Student[]
+  albums       Album[]
+
+  @@unique([schoolId, slug])
+}
+
+model Student {
+  id            String      @id @default(cuid())
+  schoolId      String
+  classId       String
+  number        String
+  name          String
+  username      String      @unique
+  accessCode    String
+  coverPhotoUrl String?
+  createdAt     DateTime    @default(now())
+  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class         SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model Album {
+  id            String      @id @default(cuid())
+  schoolId      String
+  classId       String?
+  studentId     String?
+  title         String
+  slug          String
+  description   String?
+  coverImageUrl String      @default("")
+  visibility    String      @default("private")
+  passwordHash  String?
+  shareUrl      String      @default("")
+  priceListId   String?
+  photoCount    Int         @default(0)
+  flaggedCount  Int         @default(0)
+  eventDate     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class         SchoolClass? @relation(fields: [classId], references: [id])
+  photos        Photo[]
+  orders        Order[]
+
+  @@unique([schoolId, slug])
+}
+
+model Photo {
+  id                   String               @id @default(cuid())
+  albumId              String
+  previewUrl           String
+  hdUrl                String
+  thumbnailUrl         String
+  width                Int                  @default(0)
+  height               Int                  @default(0)
+  fileName             String
+  isFavorite           Boolean              @default(false)
+  faceValidationStatus String               @default("pending")
+  createdAt            DateTime             @default(now())
+  album                Album                @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  tags                 PhotoTagAssignment[]
+}
+
+model PhotoTag {
+  id          String               @id @default(cuid())
+  label       String               @unique
+  assignments PhotoTagAssignment[]
+}
+
+model PhotoTagAssignment {
+  photoId String
+  tagId   String
+  photo   Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  tag     PhotoTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([photoId, tagId])
+}
+
+model PriceList {
+  id           String          @id @default(cuid())
+  schoolId     String
+  name         String
+  countryCode  String
+  currencyCode String
+  isDefault    Boolean         @default(false)
+  updatedAt    DateTime        @updatedAt
+  school       School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  items        PriceListItem[]
+}
+
+model PriceListItem {
+  id              String    @id @default(cuid())
+  priceListId     String
+  type            String
+  name            String
+  amount          Float
+  description     String?
+  previewImageUrl String?
+  unitsIncluded   Int?
+  priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id               String   @id @default(cuid())
+  orderNumber      String   @unique
+  schoolId         String
+  albumId          String?
+  albumTitle       String   @default("")
+  customerName     String
+  customerEmail    String
+  status           String   @default("pending_payment")
+  items            String   @default("[]") // JSON
+  totals           String   @default("{}") // JSON
+  shippingMethodId String?
+  shippingAddress  String? // JSON
+  countryCode      String   @default("US")
+  placedAt         DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  school           School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  album            Album?   @relation(fields: [albumId], references: [id])
+}
+
+model ContentBlock {
+  id                String    @id @default(cuid())
+  schoolId          String
+  type              String
+  title             String?
+  subtitle          String?
+  body              String?
+  imageUrl          String?
+  ctaLabel          String?
+  ctaUrl            String?
+  announcementStyle String?
+  priority          Int       @default(0)
+  enabled           Boolean   @default(true)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  school            School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model PricingRule {
+  id             String    @id @default(cuid())
+  schoolId       String
+  label          String
+  type           String
+  value          Float     @default(0)
+  scope          String    @default("all")
+  scopeId        String?
+  minOrderAmount Float?
+  enabled        Boolean   @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  school         School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}

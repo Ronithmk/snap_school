@@ -23,8 +23,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const DEMO_ACCOUNTS = [
-  { label: "Platform admin", email: "admin@snapschool.dev", password: "admin123" },
-  { label: "School admin (Riverside)", email: "admin@riverside.edu", password: "school123" },
+  { label: "Platform Admin", email: "admin@snapschool.app", password: "demo1234" },
+  { label: "School Admin", email: "school@snapschool.app", password: "demo1234" },
 ];
 
 export function LoginForm() {
@@ -41,6 +41,19 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
 
+  async function loginAsDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
+    setValue("email", account.email, { shouldValidate: true });
+    setValue("password", account.password, { shouldValidate: true });
+    setServerError(null);
+    try {
+      await login.mutateAsync({ email: account.email, password: account.password });
+      toast.success("Welcome back!");
+      router.push(searchParams.get("from") ?? routes.dashboard.root());
+    } catch (err) {
+      setServerError((err as ApiError).message ?? t("auth.invalidCredentials"));
+    }
+  }
+
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
     const parsed = schema.safeParse(values);
@@ -55,19 +68,6 @@ export function LoginForm() {
       setServerError(apiError.message ?? t("auth.invalidCredentials"));
     }
   });
-
-  async function loginAsDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setValue("email", account.email, { shouldValidate: true });
-    setValue("password", account.password, { shouldValidate: true });
-    setServerError(null);
-    try {
-      await login.mutateAsync({ email: account.email, password: account.password });
-      toast.success("Welcome back!");
-      router.push(searchParams.get("from") ?? routes.dashboard.root());
-    } catch (err) {
-      setServerError((err as ApiError).message ?? t("auth.invalidCredentials"));
-    }
-  }
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
@@ -107,8 +107,8 @@ export function LoginForm() {
       </p>
 
       <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-xs font-medium text-muted-foreground">Demo accounts (mock auth)</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Try a demo account</p>
+        <div className="flex flex-wrap gap-2">
           {DEMO_ACCOUNTS.map((account) => (
             <button
               key={account.email}

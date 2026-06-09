@@ -1,15 +1,5 @@
-import type { FaceValidationStatus, Photo, PhotoTag } from "@/types";
+import type { FaceValidationStatus, Photo } from "@/types";
 import { MOCK_ALBUMS } from "./albums";
-
-const TAG_POOL: PhotoTag[] = [
-  { id: "tag_portrait", label: "Portrait" },
-  { id: "tag_group", label: "Group" },
-  { id: "tag_candid", label: "Candid" },
-  { id: "tag_action", label: "Action" },
-  { id: "tag_award", label: "Award" },
-  { id: "tag_indoor", label: "Indoor" },
-  { id: "tag_outdoor", label: "Outdoor" },
-];
 
 function seededRandom(seed: string): number {
   let hash = 0;
@@ -20,46 +10,28 @@ function seededRandom(seed: string): number {
   return (Math.abs(hash) % 1000) / 1000;
 }
 
-function photoSeed(albumId: string, index: number) {
-  return `${albumId}-${index}`;
-}
-
-function seedFaceStatus(albumId: string, index: number): FaceValidationStatus {
-  const album = MOCK_ALBUMS.find((a) => a.id === albumId);
-  if (!album?.studentId) return "skipped";
-  if (album.flaggedCount > 0 && index < album.flaggedCount) return "flagged";
-  return "matched";
-}
-
-function buildPhoto(albumId: string, index: number): Photo {
-  const seed = photoSeed(albumId, index);
-  const rand = seededRandom(seed);
-  const tagCount = 1 + Math.floor(rand * 2);
-  const tags = Array.from({ length: tagCount }, (_, i) => TAG_POOL[Math.floor((rand * 10 + i * 3) % TAG_POOL.length)]);
-  return {
-    id: `pho_${seed}`,
-    albumId,
-    previewUrl: `https://picsum.photos/seed/${seed}/640/427`,
-    hdUrl: `https://picsum.photos/seed/${seed}/1600/1067`,
-    thumbnailUrl: `https://picsum.photos/seed/${seed}/320/213`,
-    width: 1600,
-    height: 1067,
-    fileName: `IMG_${1000 + index}.jpg`,
-    tags,
-    isFavorite: false,
-    faceValidationStatus: seedFaceStatus(albumId, index),
-    createdAt: "2026-05-01T00:00:00.000Z",
-  };
-}
-
 const PHOTO_CACHE = new Map<string, Photo[]>();
 
 export function getAlbumPhotos(albumId: string): Photo[] {
   const cached = PHOTO_CACHE.get(albumId);
   if (cached) return cached;
+  // MOCK_ALBUMS is now empty by default — new albums start with no photos
   const album = MOCK_ALBUMS.find((a) => a.id === albumId);
   const count = album?.photoCount ?? 0;
-  const photos = Array.from({ length: count }, (_, i) => buildPhoto(albumId, i));
+  const photos: Photo[] = Array.from({ length: count }, (_, i) => ({
+    id: `pho_${albumId}-${i}`,
+    albumId,
+    previewUrl: "",
+    hdUrl: "",
+    thumbnailUrl: "",
+    width: 0,
+    height: 0,
+    fileName: `IMG_${1000 + i}.jpg`,
+    tags: [],
+    isFavorite: false,
+    faceValidationStatus: "pending" as FaceValidationStatus,
+    createdAt: new Date().toISOString(),
+  }));
   PHOTO_CACHE.set(albumId, photos);
   return photos;
 }
@@ -73,19 +45,19 @@ function runMockFaceValidation(albumId: string, fileName: string): FaceValidatio
 
 export function addPhotosToAlbum(
   albumId: string,
-  files: { name: string }[],
+  files: File[],
 ): { photos: Photo[]; flaggedCount: number } {
   const existing = getAlbumPhotos(albumId);
-  const created: Photo[] = files.map((file, i) => {
-    const seed = `${albumId}-upload-${Date.now()}-${i}`;
+  const created: Photo[] = files.map((file) => {
+    const objectUrl = typeof URL !== "undefined" ? URL.createObjectURL(file) : "";
     return {
-      id: `pho_${seed}`,
+      id: `pho_${albumId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       albumId,
-      previewUrl: `https://picsum.photos/seed/${seed}/640/427`,
-      hdUrl: `https://picsum.photos/seed/${seed}/1600/1067`,
-      thumbnailUrl: `https://picsum.photos/seed/${seed}/320/213`,
-      width: 1600,
-      height: 1067,
+      previewUrl: objectUrl,
+      hdUrl: objectUrl,
+      thumbnailUrl: objectUrl,
+      width: 0,
+      height: 0,
       fileName: file.name,
       tags: [],
       isFavorite: false,
@@ -112,10 +84,17 @@ export function resolveFlaggedPhoto(photoId: string, action: "remove" | "approve
     const album = MOCK_ALBUMS.find((a) => a.id === albumId);
     if (action === "remove") {
       PHOTO_CACHE.set(albumId, photos.filter((p) => p.id !== photoId));
-      if (album) { album.photoCount = Math.max(0, album.photoCount - 1); album.flaggedCount = Math.max(0, album.flaggedCount - 1); album.updatedAt = new Date().toISOString(); }
+      if (album) {
+        album.photoCount = Math.max(0, album.photoCount - 1);
+        album.flaggedCount = Math.max(0, album.flaggedCount - 1);
+        album.updatedAt = new Date().toISOString();
+      }
     } else {
       photos[idx] = { ...photos[idx], faceValidationStatus: "matched" };
-      if (album) { album.flaggedCount = Math.max(0, album.flaggedCount - 1); album.updatedAt = new Date().toISOString(); }
+      if (album) {
+        album.flaggedCount = Math.max(0, album.flaggedCount - 1);
+        album.updatedAt = new Date().toISOString();
+      }
     }
     return { ok: true };
   }
@@ -133,12 +112,4 @@ export function getSchoolFlaggedPhotos(schoolId: string): Array<{ photo: Photo; 
     }
   }
   return results;
-}
-
-export function getPhotoById(photoId: string): Photo | undefined {
-  for (const album of MOCK_ALBUMS) {
-    const found = getAlbumPhotos(album.id).find((p) => p.id === photoId);
-    if (found) return found;
-  }
-  return undefined;
 }

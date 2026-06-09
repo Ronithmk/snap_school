@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { env } from "@/config/env";
 import { mockDelay } from "@/services/mock/transport";
-import { MOCK_STUDENTS, MOCK_CLASSES } from "@/services/mock/seed-data";
+import { MOCK_STUDENTS } from "@/services/mock/seed-data";
 import type { CreateStudentInput, Student } from "@/types";
 
 const ENDPOINTS = {
@@ -49,9 +49,6 @@ export const studentsService = {
 
   async create(schoolId: string, input: CreateStudentInput): Promise<Student> {
     if (env.useMockApi) {
-      // Verify class belongs to school
-      const cls = MOCK_CLASSES.find((c) => c.id === input.classId && c.schoolId === schoolId);
-      if (!cls) throw new Error("Class not found");
       const student: Student = {
         id: `stu_${Date.now()}`,
         schoolId,
