@@ -7,3 +7,4 @@ export * from "./album-form-sheet";
 export * from "./photo-upload-dropzone";
 export * from "./price-list-form-sheet";
 export * from "./lab-product-form-sheet";
+export * from "./student-import-sheet";

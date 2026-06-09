@@ -37,6 +37,7 @@ export const routes = {
     schoolReportOrdersAwaiting: (id: string) => `/dashboard/schools/${id}/reports/orders-awaiting`,
     schoolReportCashSummary: (id: string) => `/dashboard/schools/${id}/reports/cash-summary`,
     schoolInvoices: (id: string) => `/dashboard/schools/${id}/invoices`,
+    schoolApprovals: (id: string) => `/dashboard/schools/${id}/approvals`,
     // ───────────────────────────────────────────────────────────────
     lab: () => "/dashboard/lab",
     labProducts: () => "/dashboard/lab/products",

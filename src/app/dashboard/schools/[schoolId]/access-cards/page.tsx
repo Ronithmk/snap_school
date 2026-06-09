@@ -2,7 +2,7 @@
 
 import { use, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Printer, Users } from "lucide-react";
+import { ChevronRight, MessageCircle, Printer, Users } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar } from "@/components/ui/avatar";
@@ -224,13 +224,27 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
           title="Access Cards"
           description="Generate printable access cards with login credentials and QR codes for students."
           actions={
-            <Button
-              onClick={handlePrint}
-              disabled={selected.size === 0}
-            >
-              <Printer className="h-4 w-4" />
-              Print {selected.size > 0 ? `${selected.size} card${selected.size !== 1 ? "s" : ""}` : "cards"}
-            </Button>
+            <div className="flex gap-2">
+              {selected.size > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const album = (albums?.data ?? []).find((a) => a.id === (selectedAlbumId || albums?.data[0]?.id));
+                    const lines = selectedStudents.map((s) => `• ${s.name}: *${s.username}* / ${s.accessCode}`).join("\n");
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    const msg = `📸 Photo album access credentials${album ? ` for *${album.title}*` : ""}:\n\n${lines}${album ? `\n\nGallery: ${origin}/${school?.slug}/album/${album.id}` : ""}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                  Share via WhatsApp
+                </Button>
+              )}
+              <Button onClick={handlePrint} disabled={selected.size === 0}>
+                <Printer className="h-4 w-4" />
+                Print {selected.size > 0 ? `${selected.size} card${selected.size !== 1 ? "s" : ""}` : "cards"}
+              </Button>
+            </div>
           }
         />
 

@@ -8,6 +8,7 @@ import {
   Banknote,
   BarChart3,
   BookMarked,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
   ClipboardList,
@@ -197,6 +198,9 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
 
       {/* Parental connection */}
       <NavLink href={r.schoolParentalConnections(schoolId)} label="Parental connection" icon={UserPlus} onNavigate={onNavigate} />
+
+      {/* Approvals */}
+      <NavLink href={r.schoolApprovals(schoolId)} label="Approvals" icon={CheckCircle} onNavigate={onNavigate} />
 
       {/* Divider */}
       <div className="my-1 h-px bg-border" />

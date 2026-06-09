@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, Pencil, Plus, ShoppingCart } from "lucide-react";
+import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, MessageCircle, Pencil, Plus, ShoppingCart, Upload } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlbumFormSheet, ClassFormSheet } from "@/components/dashboard";
+import { StudentImportSheet } from "@/components/dashboard/student-import-sheet";
 import { useSchool } from "@/hooks/use-tenant";
 import { useClass, useSchoolAlbums, useSchoolClasses } from "@/hooks/use-albums";
 import { ALBUM_VISIBILITY_LABELS, ALBUM_VISIBILITY_TONE } from "@/config/constants";
@@ -29,6 +30,7 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
 
   const [editOpen, setEditOpen] = useState(false);
   const [createAlbumOpen, setCreateAlbumOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   if (isSchoolLoading || isClassLoading || !school || !schoolClass) {
     return (
@@ -62,10 +64,16 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
         title={schoolClass.name}
         description={schoolClass.grouping ? `${schoolClass.grouping} · ${schoolClass.albumCount} albums` : `${schoolClass.albumCount} albums`}
         actions={
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-4 w-4" />
-            Edit class
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4" />
+              Import students
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4" />
+              Edit class
+            </Button>
+          </div>
         }
       />
 
@@ -147,6 +155,7 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
         <AccessLinksTable albums={albums.data} school={school} schoolId={schoolId} />
       ) : null}
 
+      <StudentImportSheet open={importOpen} onOpenChange={setImportOpen} schoolId={schoolId} classId={classId} />
       <ClassFormSheet open={editOpen} onOpenChange={setEditOpen} schoolId={schoolId} schoolClass={schoolClass} />
       <AlbumFormSheet
         open={createAlbumOpen}
@@ -191,7 +200,7 @@ function AccessLinksTable({
               <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Album</th>
               <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Gallery link</th>
               <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cart / Order link</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Share</th>
             </tr>
           </thead>
           <tbody>
@@ -247,6 +256,15 @@ function AccessLinksTable({
                       </Link>
                       <Link href={cartUrl} target="_blank" rel="noreferrer" title="Open cart" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
                         <ShoppingCart className="h-3.5 w-3.5" />
+                      </Link>
+                      <Link
+                        href={`https://wa.me/?text=${encodeURIComponent(`📸 *${album.title}* photos are ready!\n\nView gallery: ${galleryUrl}\nOrder prints: ${cartUrl}`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Share via WhatsApp"
+                        className="rounded p-1 text-[#25D366] hover:bg-[#25D366]/10"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </td>
