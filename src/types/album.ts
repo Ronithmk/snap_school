@@ -9,6 +9,8 @@ export interface SchoolClass {
   grouping?: string;
   albumCount: number;
   studentCount?: number;
+  /** Price list assigned to this class — all albums in this class inherit it. */
+  priceListId?: ID | null;
   createdAt: ISODateString;
 }
 
@@ -17,6 +19,7 @@ export interface CreateClassInput {
   slug: string;
   grouping?: string;
   studentCount?: number;
+  priceListId?: ID | null;
 }
 
 export type UpdateClassInput = Partial<CreateClassInput>;

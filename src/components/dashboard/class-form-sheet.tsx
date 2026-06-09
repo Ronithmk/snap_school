@@ -8,8 +8,10 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { useCreateClass, useUpdateClass } from "@/hooks/use-albums";
+import { usePriceLists } from "@/hooks/use-pricing";
 import type { ApiError, SchoolClass } from "@/types";
 
 const schema = z.object({
@@ -20,9 +22,12 @@ const schema = z.object({
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
   grouping: z.string().optional(),
   studentCount: z.union([z.coerce.number().min(0), z.literal("")]).optional(),
+  priceListId: z.string(),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+const NO_PRICE_LIST = "__none__";
 
 function slugify(value: string) {
   return value
@@ -33,12 +38,13 @@ function slugify(value: string) {
 }
 
 function defaultsFor(schoolClass: SchoolClass | null): FormValues {
-  if (!schoolClass) return { name: "", slug: "", grouping: "", studentCount: "" };
+  if (!schoolClass) return { name: "", slug: "", grouping: "", studentCount: "", priceListId: NO_PRICE_LIST };
   return {
     name: schoolClass.name,
     slug: schoolClass.slug,
     grouping: schoolClass.grouping ?? "",
     studentCount: schoolClass.studentCount ?? "",
+    priceListId: schoolClass.priceListId ?? NO_PRICE_LIST,
   };
 }
 
@@ -54,6 +60,7 @@ export function ClassFormSheet({ open, onOpenChange, schoolId, schoolClass = nul
   const isEdit = !!schoolClass;
   const createClass = useCreateClass(schoolId);
   const updateClass = useUpdateClass(schoolId);
+  const { data: priceLists } = usePriceLists(schoolId);
   const isSaving = createClass.isPending || updateClass.isPending;
 
   const {
@@ -71,6 +78,7 @@ export function ClassFormSheet({ open, onOpenChange, schoolId, schoolClass = nul
 
   const name = watch("name");
   const slug = watch("slug");
+  const priceListId = watch("priceListId");
 
   const onSubmit = handleSubmit(async (values) => {
     const payload = {
@@ -78,6 +86,7 @@ export function ClassFormSheet({ open, onOpenChange, schoolId, schoolClass = nul
       slug: values.slug,
       grouping: values.grouping || undefined,
       studentCount: values.studentCount === "" ? undefined : Number(values.studentCount),
+      priceListId: values.priceListId === NO_PRICE_LIST ? null : values.priceListId,
     };
 
     try {
@@ -120,16 +129,29 @@ export function ClassFormSheet({ open, onOpenChange, schoolId, schoolClass = nul
           {errors.slug ? <p className="text-sm text-destructive">{errors.slug.message}</p> : null}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="class-grouping">Grouping</Label>
-          <Input id="class-grouping" {...register("grouping")} placeholder="Grade 5, Year 2026, Events…" />
-          <p className="text-xs text-muted-foreground">Optional context shown alongside the class name.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="class-grouping">Grouping</Label>
+            <Input id="class-grouping" {...register("grouping")} placeholder="Grade 5, Events…" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="class-student-count">Students</Label>
+            <Input id="class-student-count" type="number" min="0" {...register("studentCount")} placeholder="0" />
+            {errors.studentCount ? <p className="text-sm text-destructive">{errors.studentCount.message}</p> : null}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="class-student-count">Student count</Label>
-          <Input id="class-student-count" type="number" min="0" {...register("studentCount")} placeholder="Optional" />
-          {errors.studentCount ? <p className="text-sm text-destructive">{errors.studentCount.message}</p> : null}
+          <Label htmlFor="class-price-list">Price list</Label>
+          <Select id="class-price-list" value={priceListId} onChange={(e) => setValue("priceListId", e.target.value)}>
+            <option value={NO_PRICE_LIST}>No price list assigned</option>
+            {(priceLists ?? []).map((list) => (
+              <option key={list.id} value={list.id}>
+                {list.name} ({list.items.length} products)
+              </option>
+            ))}
+          </Select>
+          <p className="text-xs text-muted-foreground">All albums in this class will use this price list.</p>
         </div>
 
         <Button type="submit" className="w-full" disabled={isSaving}>

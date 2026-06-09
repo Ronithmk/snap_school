@@ -66,15 +66,15 @@ export const MOCK_SCHOOLS: School[] = [
 ];
 
 export const MOCK_CLASSES: SchoolClass[] = [
-  { id: "cls_riv_5a", schoolId: "sch_riverside", name: "Grade 5A", slug: "grade-5a", grouping: "Grade 5", albumCount: 2, studentCount: 24, createdAt: now },
-  { id: "cls_riv_5b", schoolId: "sch_riverside", name: "Grade 5B", slug: "grade-5b", grouping: "Grade 5", albumCount: 1, studentCount: 22, createdAt: now },
-  { id: "cls_riv_sports", schoolId: "sch_riverside", name: "Sports Day 2026", slug: "sports-day-2026", grouping: "Events", albumCount: 2, studentCount: undefined, createdAt: now },
+  { id: "cls_riv_5a", schoolId: "sch_riverside", name: "Grade 5A", slug: "grade-5a", grouping: "Grade 5", albumCount: 2, studentCount: 24, priceListId: "pl_us_default", createdAt: now },
+  { id: "cls_riv_5b", schoolId: "sch_riverside", name: "Grade 5B", slug: "grade-5b", grouping: "Grade 5", albumCount: 1, studentCount: 22, priceListId: "pl_us_default", createdAt: now },
+  { id: "cls_riv_sports", schoolId: "sch_riverside", name: "Sports Day 2026", slug: "sports-day-2026", grouping: "Events", albumCount: 2, studentCount: undefined, priceListId: null, createdAt: now },
 
-  { id: "cls_oak_seniors", schoolId: "sch_oakwood", name: "Senior Class of 2026", slug: "seniors-2026", grouping: "Year 13", albumCount: 2, studentCount: 110, createdAt: now },
-  { id: "cls_oak_drama", schoolId: "sch_oakwood", name: "Drama Production", slug: "drama-production", grouping: "Events", albumCount: 2, studentCount: undefined, createdAt: now },
+  { id: "cls_oak_seniors", schoolId: "sch_oakwood", name: "Senior Class of 2026", slug: "seniors-2026", grouping: "Year 13", albumCount: 2, studentCount: 110, priceListId: "pl_uk_standard", createdAt: now },
+  { id: "cls_oak_drama", schoolId: "sch_oakwood", name: "Drama Production", slug: "drama-production", grouping: "Events", albumCount: 2, studentCount: undefined, priceListId: null, createdAt: now },
 
-  { id: "cls_sun_2a", schoolId: "sch_sunrise", name: "Class 2A", slug: "class-2a", grouping: "Grade 2", albumCount: 1, studentCount: 18, createdAt: now },
-  { id: "cls_sun_annual", schoolId: "sch_sunrise", name: "Annual Day", slug: "annual-day", grouping: "Events", albumCount: 1, studentCount: undefined, createdAt: now },
+  { id: "cls_sun_2a", schoolId: "sch_sunrise", name: "Class 2A", slug: "class-2a", grouping: "Grade 2", albumCount: 1, studentCount: 18, priceListId: "pl_in_standard", createdAt: now },
+  { id: "cls_sun_annual", schoolId: "sch_sunrise", name: "Annual Day", slug: "annual-day", grouping: "Events", albumCount: 1, studentCount: undefined, priceListId: null, createdAt: now },
 ];
 
 // Shared portrait preview images for price list item mockups
