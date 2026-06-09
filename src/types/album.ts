@@ -29,10 +29,26 @@ export interface AlbumPricing {
   currencyCode: string;
 }
 
+/**
+ * Face-recognition validation status for an individual photo.
+ *
+ * - pending   : uploaded but not yet processed by AI
+ * - matched   : AI confirmed the face belongs to this album's student — SAFE to show
+ * - flagged   : AI detected a face that does NOT match the album's student — BLOCKED from storefront
+ * - skipped   : album has no studentId (event/group album) — validation is not applicable
+ */
+export type FaceValidationStatus = "pending" | "matched" | "flagged" | "skipped";
+
 export interface Album {
   id: ID;
   schoolId: ID;
   classId: ID | null;
+  /**
+   * The single student this album belongs to.
+   * NULL for event / group albums where 1-kid enforcement does not apply.
+   * When set, EVERY photo in this album must belong to this student only.
+   */
+  studentId: ID | null;
   title: string;
   slug: string;
   description?: string;
@@ -43,6 +59,8 @@ export interface Album {
   shareUrl: string;
   pricing: AlbumPricing;
   photoCount: number;
+  /** How many photos in this album are currently flagged as face mismatches. */
+  flaggedCount: number;
   eventDate?: ISODateString;
   createdAt: ISODateString;
   updatedAt: ISODateString;
@@ -52,6 +70,8 @@ export interface CreateAlbumInput {
   title: string;
   slug: string;
   classId: ID | null;
+  /** Bind this album to exactly one student. Leave null for event/group albums. */
+  studentId?: ID | null;
   description?: string;
   visibility: AlbumVisibility;
   password?: string;
@@ -79,6 +99,8 @@ export interface Photo {
   fileName: string;
   tags: PhotoTag[];
   isFavorite?: boolean;
+  /** Result of the AI face-recognition check against the album's student reference photo. */
+  faceValidationStatus: FaceValidationStatus;
   createdAt: ISODateString;
 }
 
@@ -90,4 +112,12 @@ export interface AlbumAccessRequest {
 export interface UploadPhotosInput {
   albumId: ID;
   files: File[];
+}
+
+/** Summary of a flagged photo, used on the admin review page. */
+export interface FlaggedPhotoReport {
+  photo: Photo;
+  album: Album;
+  /** Reason string returned by the AI engine. */
+  reason: string;
 }

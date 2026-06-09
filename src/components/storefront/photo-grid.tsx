@@ -21,7 +21,10 @@ interface PhotoGridProps {
 
 export function PhotoGrid({ albumId, priceList, onAddToCart }: PhotoGridProps) {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAlbumPhotos(albumId);
-  const photos = data?.pages.flatMap((page) => page.data) ?? [];
+  // Never show flagged photos on the storefront — 1-album-1-kid rule enforcement
+  const photos = (data?.pages.flatMap((page) => page.data) ?? []).filter(
+    (p) => p.faceValidationStatus !== "flagged",
+  );
 
   if (isLoading) {
     return (

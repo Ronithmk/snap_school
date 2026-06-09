@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,10 @@ import { Sheet } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateAlbum, useUpdateAlbum } from "@/hooks/use-albums";
+import { useStudents } from "@/hooks/use-students";
 import { usePriceLists } from "@/hooks/use-pricing";
 import { ALBUM_VISIBILITY_LABELS } from "@/config/constants";
+import { cn } from "@/lib/utils";
 import type { Album, AlbumVisibility, ApiError, SchoolClass } from "@/types";
 
 const schema = z.object({
@@ -24,6 +26,7 @@ const schema = z.object({
     .min(1, "Slug is required")
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
   classId: z.string(),
+  studentId: z.string(),
   description: z.string().optional(),
   visibility: z.enum(["public", "unlisted", "private"]),
   eventDate: z.string().optional(),
@@ -35,6 +38,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const NO_CLASS = "__none__";
+const NO_STUDENT = "__none__";
 const SCHOOL_DEFAULT_PRICING = "__default__";
 
 function slugify(value: string) {
@@ -51,6 +55,7 @@ function defaultsFor(album: Album | null): FormValues {
       title: "",
       slug: "",
       classId: NO_CLASS,
+      studentId: NO_STUDENT,
       description: "",
       visibility: "public",
       eventDate: "",
@@ -63,6 +68,7 @@ function defaultsFor(album: Album | null): FormValues {
     title: album.title,
     slug: album.slug,
     classId: album.classId ?? NO_CLASS,
+    studentId: album.studentId ?? NO_STUDENT,
     description: album.description ?? "",
     visibility: album.visibility,
     eventDate: album.eventDate ? album.eventDate.slice(0, 10) : "",
@@ -110,8 +116,19 @@ export function AlbumFormSheet({ open, onOpenChange, schoolId, classes, defaultC
   const slug = watch("slug");
   const visibility = watch("visibility");
   const classId = watch("classId");
+  const studentId = watch("studentId");
   const priceListId = watch("priceListId");
   const passwordProtected = watch("passwordProtected");
+
+  const hasClass = classId !== NO_CLASS;
+  const { data: studentsData } = useStudents(hasClass ? schoolId : undefined, hasClass ? classId : undefined);
+  const students = studentsData ?? [];
+  const selectedStudent = students.find((s) => s.id === studentId);
+
+  // When class changes, reset student selection
+  useEffect(() => {
+    setValue("studentId", NO_STUDENT);
+  }, [classId, setValue]);
 
   const onSubmit = handleSubmit(async (values) => {
     if (values.passwordProtected && !isEdit && !values.password?.trim()) {
@@ -119,10 +136,13 @@ export function AlbumFormSheet({ open, onOpenChange, schoolId, classes, defaultC
       return;
     }
 
+    const resolvedStudentId = values.studentId === NO_STUDENT ? null : values.studentId;
+
     const payload = {
       title: values.title,
       slug: values.slug,
       classId: values.classId === NO_CLASS ? null : values.classId,
+      studentId: resolvedStudentId,
       description: values.description || undefined,
       visibility: values.visibility,
       eventDate: values.eventDate ? new Date(values.eventDate).toISOString() : undefined,
@@ -198,6 +218,47 @@ export function AlbumFormSheet({ open, onOpenChange, schoolId, classes, defaultC
             </Select>
           </div>
         </div>
+
+        {hasClass ? (
+          <div className="space-y-3 rounded-lg border border-border p-4">
+            <div className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium">1-Kid Album (Portrait Mode)</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Assign a single student to enforce face-matching — all uploaded photos must belong to that student only.
+              Leave unset for group or event albums.
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="album-student">Student</Label>
+                <Select id="album-student" value={studentId} onChange={(e) => setValue("studentId", e.target.value)}>
+                  <option value={NO_STUDENT}>No student (event / group album)</option>
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} — #{s.number}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              {selectedStudent?.coverPhotoUrl ? (
+                <div className="mt-5 shrink-0">
+                  <img
+                    src={selectedStudent.coverPhotoUrl}
+                    alt={selectedStudent.name}
+                    className={cn("h-10 w-10 rounded-full object-cover ring-2 ring-primary")}
+                  />
+                </div>
+              ) : null}
+            </div>
+            {studentId !== NO_STUDENT ? (
+              <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                <UserCheck className="h-3.5 w-3.5" />
+                AI face matching will run on every uploaded photo. Mismatches are flagged for review.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">

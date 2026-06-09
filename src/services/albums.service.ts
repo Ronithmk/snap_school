@@ -3,12 +3,13 @@ import { env } from "@/config/env";
 import { mockDelay, mockReject, paginate, searchFilter } from "@/services/mock/transport";
 import { MOCK_ALBUMS } from "@/services/mock/albums";
 import { MOCK_SCHOOLS } from "@/services/mock/seed-data";
-import { addPhotosToAlbum, getAlbumPhotos } from "@/services/mock/photos";
+import { addPhotosToAlbum, getAlbumPhotos, getSchoolFlaggedPhotos, resolveFlaggedPhoto } from "@/services/mock/photos";
 import { routes } from "@/config/routes";
 import type {
   Album,
   AlbumAccessRequest,
   CreateAlbumInput,
+  FlaggedPhotoReport,
   PaginatedResponse,
   Photo,
   QueryParams,
@@ -80,7 +81,7 @@ export const albumsService = {
       const school = MOCK_SCHOOLS.find((s) => s.id === schoolId);
       const id = `alb_${Date.now()}`;
       const now = new Date().toISOString();
-      const { password, priceListId, ...rest } = input;
+      const { password, priceListId, studentId: inputStudentId, ...rest } = input;
       const album: Album = {
         id,
         schoolId,
@@ -88,6 +89,8 @@ export const albumsService = {
         shareUrl: school ? routes.storefront.album(school.slug, id) : `/albums/${id}`,
         pricing: { priceListId: priceListId ?? null, currencyCode: school?.settings.currencyCode ?? "" },
         photoCount: 0,
+        flaggedCount: 0,
+        studentId: inputStudentId ?? null,
         passwordProtected: !!password,
         createdAt: now,
         updatedAt: now,
@@ -129,15 +132,37 @@ export const albumsService = {
     await apiClient.delete(ENDPOINTS.byId(albumId));
   },
 
-  async uploadPhotos({ albumId, files }: UploadPhotosInput): Promise<Photo[]> {
+  async uploadPhotos({ albumId, files }: UploadPhotosInput): Promise<{ photos: Photo[]; flaggedCount: number }> {
     if (env.useMockApi) {
-      return mockDelay(addPhotosToAlbum(albumId, files), 700);
+      const result = addPhotosToAlbum(albumId, files);
+      return mockDelay(result, 700);
     }
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
-    const { data } = await apiClient.post<Photo[]>(ENDPOINTS.photos(albumId), formData, {
+    const { data } = await apiClient.post<{ photos: Photo[]; flaggedCount: number }>(ENDPOINTS.photos(albumId), formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
+  },
+
+  async getFlaggedPhotos(schoolId: string): Promise<FlaggedPhotoReport[]> {
+    if (env.useMockApi) {
+      const items = getSchoolFlaggedPhotos(schoolId);
+      const reports: FlaggedPhotoReport[] = items.map(({ photo, albumId }) => {
+        const album = MOCK_ALBUMS.find((a) => a.id === albumId)!;
+        return { photo, album, reason: "Face does not match album student reference." };
+      });
+      return mockDelay(reports);
+    }
+    const { data } = await apiClient.get<FlaggedPhotoReport[]>(`/schools/${schoolId}/flagged-photos`);
+    return data;
+  },
+
+  async resolveFlag(photoId: string, action: "remove" | "approve"): Promise<void> {
+    if (env.useMockApi) {
+      resolveFlaggedPhoto(photoId, action);
+      return mockDelay(undefined, 300);
+    }
+    await apiClient.post(`/photos/${photoId}/resolve-flag`, { action });
   },
 };

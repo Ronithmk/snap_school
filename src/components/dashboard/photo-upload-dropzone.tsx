@@ -2,13 +2,19 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useUploadPhotos } from "@/hooks/use-albums";
 import { cn } from "@/lib/utils";
-import type { ApiError } from "@/types";
+import type { ApiError, Photo } from "@/types";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+interface UploadResult {
+  photos: Photo[];
+  flaggedCount: number;
+}
 
 interface PhotoUploadDropzoneProps {
   albumId: string;
@@ -17,6 +23,7 @@ interface PhotoUploadDropzoneProps {
 export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [lastResult, setLastResult] = useState<UploadResult | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadPhotos(albumId);
 
@@ -25,6 +32,7 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
     const incoming = Array.from(list).filter((file) => ACCEPTED_TYPES.includes(file.type));
     if (incoming.length < list.length) toast.error("Only JPG, PNG, and WEBP images are supported.");
     setFiles((prev) => [...prev, ...incoming]);
+    setLastResult(null);
   }
 
   function removeFile(index: number) {
@@ -34,10 +42,17 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
   async function handleUpload() {
     if (files.length === 0) return;
     try {
-      const uploaded = await upload.mutateAsync({ albumId, files });
-      toast.success(`Uploaded ${uploaded.length} photo${uploaded.length === 1 ? "" : "s"}.`);
+      const result = await upload.mutateAsync({ albumId, files });
+      setLastResult(result);
       setFiles([]);
       if (inputRef.current) inputRef.current.value = "";
+      if (result.flaggedCount > 0) {
+        toast.warning(
+          `${result.photos.length} photo${result.photos.length === 1 ? "" : "s"} uploaded — ${result.flaggedCount} flagged for review.`,
+        );
+      } else {
+        toast.success(`Uploaded ${result.photos.length} photo${result.photos.length === 1 ? "" : "s"}.`);
+      }
     } catch (err) {
       toast.error((err as ApiError).message ?? "Upload failed. Please try again.");
     }
@@ -108,6 +123,51 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+
+      {lastResult ? (
+        <div className={cn(
+          "rounded-xl border p-4 space-y-3",
+          lastResult.flaggedCount > 0 ? "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30" : "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
+        )}>
+          <div className="flex items-center gap-2">
+            {lastResult.flaggedCount > 0 ? (
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+            )}
+            <p className="text-sm font-medium">
+              {lastResult.flaggedCount > 0
+                ? `${lastResult.photos.length} uploaded — ${lastResult.flaggedCount} need review`
+                : `${lastResult.photos.length} photo${lastResult.photos.length === 1 ? "" : "s"} uploaded successfully`}
+            </p>
+          </div>
+
+          {lastResult.photos.length > 0 ? (
+            <ul className="space-y-1">
+              {lastResult.photos.map((photo) => (
+                <li key={photo.id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{photo.fileName}</span>
+                  {photo.faceValidationStatus === "flagged" ? (
+                    <Badge variant="warning" className="shrink-0 text-[10px]">Face mismatch</Badge>
+                  ) : photo.faceValidationStatus === "matched" ? (
+                    <Badge variant="positive" className="shrink-0 text-[10px]">Matched</Badge>
+                  ) : photo.faceValidationStatus === "skipped" ? (
+                    <Badge variant="neutral" className="shrink-0 text-[10px]">No check</Badge>
+                  ) : (
+                    <Badge variant="secondary" className="shrink-0 text-[10px]">Pending</Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {lastResult.flaggedCount > 0 ? (
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Flagged photos are hidden from the storefront until reviewed in the Approvals page.
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

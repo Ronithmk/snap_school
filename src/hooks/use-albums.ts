@@ -137,6 +137,28 @@ export function useUploadPhotos(albumId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["album-photos", albumId] });
       queryClient.invalidateQueries({ queryKey: ["album", albumId] });
+      queryClient.invalidateQueries({ queryKey: ["flagged-photos"] });
+    },
+  });
+}
+
+export function useFlaggedPhotos(schoolId: string | undefined) {
+  return useQuery({
+    queryKey: ["flagged-photos", schoolId],
+    queryFn: () => albumsService.getFlaggedPhotos(schoolId!),
+    enabled: !!schoolId,
+  });
+}
+
+export function useResolveFlag(schoolId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ photoId, action }: { photoId: string; action: "remove" | "approve" }) =>
+      albumsService.resolveFlag(photoId, action),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flagged-photos", schoolId] });
+      queryClient.invalidateQueries({ queryKey: ["album-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["albums", schoolId] });
     },
   });
 }
