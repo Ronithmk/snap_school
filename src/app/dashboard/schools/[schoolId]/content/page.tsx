@@ -3,16 +3,16 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle, ExternalLink, GripVertical, ImageIcon, Info,
-  Loader2, Megaphone, Pencil, Plus, Tag, Trash2, X,
+  ExternalLink, GripVertical, ImageIcon, Info,
+  Loader2, Megaphone, Pencil, Plus, Tag, Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet } from "@/components/ui/sheet";
 import {
@@ -120,7 +120,7 @@ function BlockCard({
 
 const EMPTY_FORM: CreateContentBlockInput = {
   type: "banner", title: "", subtitle: "", body: "",
-  imageUrl: "", ctaLabel: "", ctaUrl: "",
+  imageUrl: undefined, ctaLabel: "", ctaUrl: "",
   announcementStyle: "info", enabled: true,
 };
 
@@ -139,7 +139,7 @@ function BlockFormSheet({
     title: editing.title ?? "",
     subtitle: editing.subtitle ?? "",
     body: editing.body ?? "",
-    imageUrl: editing.imageUrl ?? "",
+    imageUrl: editing.imageUrl ?? undefined,
     ctaLabel: editing.ctaLabel ?? "",
     ctaUrl: editing.ctaUrl ?? "",
     announcementStyle: editing.announcementStyle ?? "info",
@@ -237,15 +237,30 @@ function BlockFormSheet({
           </div>
         )}
 
-        {/* Image URL */}
+        {/* Image upload */}
         {showImage && (
-          <div className="space-y-1.5">
-            <Label htmlFor="cb-image">Image URL</Label>
-            <Input id="cb-image" value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="https://…" />
-            {form.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.imageUrl} alt="" className="mt-1 h-28 w-full rounded-md object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-            )}
+          <div className="space-y-2">
+            <Label>
+              {form.type === "sponsor" ? "Sponsor logo" : "Image"}
+            </Label>
+            <ImageUpload
+              value={form.imageUrl || undefined}
+              onChange={(url) => set("imageUrl", url ?? "")}
+              accept={form.type === "sponsor" ? "any" : "image"}
+              label={form.type === "sponsor" ? "Upload sponsor logo" : "Upload image"}
+              hint={
+                form.type === "banner"
+                  ? "JPG, PNG · recommended 1400×400 px"
+                  : form.type === "sponsor"
+                  ? "PNG, SVG, PDF · recommended 200×80 px"
+                  : "JPG, PNG · max 10 MB"
+              }
+              aspectRatio={
+                form.type === "banner" ? "16/5"
+                : form.type === "sponsor" ? "3/1"
+                : "4/3"
+              }
+            />
           </div>
         )}
 

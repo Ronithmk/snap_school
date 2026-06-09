@@ -9,6 +9,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSchool, useUpdateSchool } from "@/hooks/use-tenant";
@@ -41,8 +42,8 @@ export default function BrandingPage({ params }: Props) {
   const { data: school } = useSchool(schoolId);
   const updateSchool = useUpdateSchool();
 
-  const [logoUrl, setLogoUrl] = useState("");
-  const [bannerUrl, setBannerUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | undefined>();
+  const [bannerUrl, setBannerUrl] = useState<string | undefined>();
   const [primaryColor, setPrimaryColor] = useState("#6366f1");
   const [customColor, setCustomColor] = useState("");
   const [footerText, setFooterText] = useState("");
@@ -55,8 +56,8 @@ export default function BrandingPage({ params }: Props) {
 
   useEffect(() => {
     if (school) {
-      setLogoUrl(school.logoUrl ?? "");
-      setBannerUrl(school.bannerUrl ?? "");
+      setLogoUrl(school.logoUrl ?? undefined);
+      setBannerUrl(school.bannerUrl ?? undefined);
       setPrimaryColor(school.settings?.primaryColor ?? "#6366f1");
       setFooterText(school.settings?.footerText ?? "");
       setShowPoweredBy(school.settings?.showPoweredBy ?? true);
@@ -73,8 +74,8 @@ export default function BrandingPage({ params }: Props) {
     await updateSchool.mutateAsync({
       id: school.id,
       input: {
-        logoUrl: logoUrl || undefined,
-        bannerUrl: bannerUrl || undefined,
+        logoUrl,
+        bannerUrl,
         settings: {
           ...school.settings,
           primaryColor: effectiveColor,
@@ -131,17 +132,37 @@ export default function BrandingPage({ params }: Props) {
 
           {/* Identity */}
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ImageIcon className="h-4 w-4" />Logos & Images</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="logo-url">Logo URL</Label>
-                <Input id="logo-url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://cdn.example.com/logo.png" />
-                <p className="text-xs text-muted-foreground">Recommended: 200×60 px, transparent PNG</p>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ImageIcon className="h-4 w-4" />
+                Logos & Images
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo */}
+              <div className="space-y-2">
+                <Label>School logo</Label>
+                <ImageUpload
+                  value={logoUrl}
+                  onChange={setLogoUrl}
+                  accept="any"
+                  label="Upload logo"
+                  hint="PNG, SVG, PDF · max 10 MB · recommended 200×60 px"
+                  aspectRatio="3/1"
+                />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="banner-url">Hero banner URL</Label>
-                <Input id="banner-url" value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="https://cdn.example.com/banner.jpg" />
-                <p className="text-xs text-muted-foreground">Recommended: 1400×400 px</p>
+
+              {/* Hero banner */}
+              <div className="space-y-2">
+                <Label>Hero banner</Label>
+                <ImageUpload
+                  value={bannerUrl}
+                  onChange={setBannerUrl}
+                  accept="image"
+                  label="Upload hero banner"
+                  hint="JPG, PNG · max 10 MB · recommended 1400×400 px"
+                  aspectRatio="16/5"
+                />
               </div>
             </CardContent>
           </Card>
@@ -250,7 +271,7 @@ export default function BrandingPage({ params }: Props) {
             <div className="flex items-center gap-3 px-4 py-2.5 border-b bg-background" style={{ borderBottomColor: effectiveColor + "33" }}>
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="logo" className="h-7 object-contain" onError={() => {}} />
+                <img src={logoUrl} alt="logo" className="h-7 max-w-[80px] object-contain" />
               ) : (
                 <div className="h-7 w-16 rounded bg-muted" />
               )}
@@ -268,7 +289,7 @@ export default function BrandingPage({ params }: Props) {
             >
               {bannerUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={bannerUrl} alt="banner" className="absolute inset-0 h-full w-full object-cover" onError={() => {}} />
+                <img src={bannerUrl} alt="banner" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-1 text-center">
                   <ImageIcon className="h-5 w-5 text-muted-foreground/40" />
