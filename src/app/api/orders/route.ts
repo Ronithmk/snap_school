@@ -93,13 +93,11 @@ export async function POST(req: NextRequest) {
       customerName,
       customerEmail,
       status: status ?? "pending",
-      items: typeof items === "string" ? items : JSON.stringify(items ?? []),
-      totals: typeof totals === "string" ? totals : JSON.stringify(totals ?? {}),
+      items: typeof items === "object" ? items : JSON.parse(items ?? "[]"),
+      totals: typeof totals === "object" ? totals : JSON.parse(totals ?? "{}"),
       shippingMethodId: shippingMethodId ?? null,
-      shippingAddress: shippingAddress
-        ? (typeof shippingAddress === "string" ? shippingAddress : JSON.stringify(shippingAddress))
-        : null,
-      countryCode: countryCode ?? null,
+      shippingAddress: shippingAddress ?? undefined,
+      countryCode: countryCode ?? "IN",
     },
   });
 

@@ -3,19 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String       @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
-  email        String       @unique
+  email        String        @unique
   password     String
-  role         String       @default("school_admin")
+  role         String        @default("school_admin")
   avatarUrl    String?
   schoolAdmins SchoolAdmin[]
-  createdAt    DateTime     @default(now())
+  createdAt    DateTime      @default(now())
 }
 
 model SchoolAdmin {
@@ -28,16 +28,16 @@ model SchoolAdmin {
 }
 
 model School {
-  id            String        @id @default(cuid())
-  slug          String        @unique
+  id            String         @id @default(cuid())
+  slug          String         @unique
   name          String
   logoUrl       String?
   bannerUrl     String?
   description   String?
-  status        String        @default("active")
-  settings      String        @default("{}") // JSON: SchoolSettings
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  status        String         @default("active")
+  settings      Json           @default("{}")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   admins        SchoolAdmin[]
   classes       SchoolClass[]
   albums        Album[]
@@ -65,38 +65,38 @@ model SchoolClass {
 }
 
 model Student {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   schoolId      String
-  classId       String
-  number        String
+  classId       String?
+  number        String?
   name          String
-  username      String      @unique
+  username      String       @unique
   accessCode    String
   coverPhotoUrl String?
-  createdAt     DateTime    @default(now())
-  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class         SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  school        School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class         SchoolClass? @relation(fields: [classId], references: [id])
 }
 
 model Album {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   schoolId      String
   classId       String?
   studentId     String?
   title         String
   slug          String
   description   String?
-  coverImageUrl String      @default("")
-  visibility    String      @default("private")
+  coverImageUrl String       @default("")
+  visibility    String       @default("private")
   passwordHash  String?
-  shareUrl      String      @default("")
+  shareUrl      String       @default("")
   priceListId   String?
-  photoCount    Int         @default(0)
-  flaggedCount  Int         @default(0)
+  photoCount    Int          @default(0)
+  flaggedCount  Int          @default(0)
   eventDate     DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  school        School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class         SchoolClass? @relation(fields: [classId], references: [id])
   photos        Photo[]
   orders        Order[]
@@ -139,8 +139,8 @@ model PriceList {
   id           String          @id @default(cuid())
   schoolId     String
   name         String
-  countryCode  String
-  currencyCode String
+  countryCode  String          @default("IN")
+  currencyCode String          @default("INR")
   isDefault    Boolean         @default(false)
   updatedAt    DateTime        @updatedAt
   school       School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -160,23 +160,25 @@ model PriceListItem {
 }
 
 model Order {
-  id               String   @id @default(cuid())
-  orderNumber      String   @unique
-  schoolId         String
-  albumId          String?
-  albumTitle       String   @default("")
-  customerName     String
-  customerEmail    String
-  status           String   @default("pending_payment")
-  items            String   @default("[]") // JSON
-  totals           String   @default("{}") // JSON
-  shippingMethodId String?
-  shippingAddress  String? // JSON
-  countryCode      String   @default("US")
-  placedAt         DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  school           School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  album            Album?   @relation(fields: [albumId], references: [id])
+  id                String   @id @default(cuid())
+  orderNumber       String   @unique
+  schoolId          String
+  albumId           String?
+  albumTitle        String   @default("")
+  customerName      String
+  customerEmail     String
+  status            String   @default("pending_payment")
+  items             Json     @default("[]")
+  totals            Json     @default("{}")
+  shippingMethodId  String?
+  shippingAddress   Json?
+  countryCode       String   @default("IN")
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  placedAt          DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  album             Album?   @relation(fields: [albumId], references: [id])
 }
 
 model ContentBlock {

@@ -26,6 +26,7 @@ import {
   Palette,
   PieChart,
   Plug,
+  Printer,
   Receipt,
   Settings,
   ShoppingBag,
@@ -216,6 +217,9 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
 
       {/* Approvals */}
       <NavLink href={r.schoolApprovals(schoolId)} label="Approvals" icon={CheckCircle} onNavigate={onNavigate} />
+
+      {/* Print Queue */}
+      <NavLink href={r.schoolPrintQueue(schoolId)} label="Print Queue" icon={Printer} onNavigate={onNavigate} />
 
       {/* Divider */}
       <div className="my-1 h-px bg-border" />

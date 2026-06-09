@@ -5,7 +5,7 @@ import { ok, err, paginate, parseIntParam } from "@/lib/api-helpers";
 
 function formatSchool(s: Awaited<ReturnType<typeof db.school.findFirst>>) {
   if (!s) return null;
-  const settings = JSON.parse(s.settings || "{}");
+  const settings = typeof s.settings === "string" ? JSON.parse(s.settings) : (s.settings ?? {});
   return {
     id: s.id, slug: s.slug, name: s.name, logoUrl: s.logoUrl, bannerUrl: s.bannerUrl,
     description: s.description, status: s.status, settings,

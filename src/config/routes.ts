@@ -38,6 +38,7 @@ export const routes = {
     schoolReportCashSummary: (id: string) => `/dashboard/schools/${id}/reports/cash-summary`,
     schoolInvoices: (id: string) => `/dashboard/schools/${id}/invoices`,
     schoolApprovals: (id: string) => `/dashboard/schools/${id}/approvals`,
+    schoolPrintQueue: (id: string) => `/dashboard/schools/${id}/print-queue`,
     // ── School settings ────────────────────────────────────────────
     schoolBranding: (id: string) => `/dashboard/schools/${id}/branding`,
     schoolContent: (id: string) => `/dashboard/schools/${id}/content`,

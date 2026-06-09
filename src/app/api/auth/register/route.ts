@@ -5,7 +5,7 @@ import { signToken } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
-  const { name, email, password } = await req.json();
+  const { name, email, password, schoolName } = await req.json();
   if (!name || !email || !password) return err("Name, email, and password are required.", 400);
 
   const exists = await db.user.findUnique({ where: { email: email.toLowerCase() } });
@@ -20,13 +20,28 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const token = await signToken({ id: user.id, role: user.role, schoolIds: [] });
+  let schoolIds: string[] = [];
+
+  if (schoolName) {
+    const slug = schoolName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const uniqueSlug = `${slug}-${Date.now()}`;
+    const school = await db.school.create({
+      data: { name: schoolName, slug: uniqueSlug, settings: "{}" },
+    });
+    await db.schoolAdmin.create({ data: { userId: user.id, schoolId: school.id } });
+    schoolIds = [school.id];
+  }
+
+  const token = await signToken({ id: user.id, role: user.role, schoolIds });
 
   return ok({
     session: {
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl, schoolIds: [] },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl, schoolIds },
       token,
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     },
-  });
+  }, 201);
 }
