@@ -1,5 +1,5 @@
 [build]
-  command   = "cp prisma/schema.prod.prisma prisma/schema.prisma && prisma generate && prisma db push --skip-generate && next build"
+  command   = "cp prisma/schema.prod.prisma prisma/schema.prisma && prisma generate && ([ -n \"$DATABASE_URL\" ] && prisma db push --skip-generate || echo 'DATABASE_URL not set — skipping db push') && next build"
   publish   = ".next"
 
 [build.environment]
