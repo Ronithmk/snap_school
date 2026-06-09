@@ -5,6 +5,7 @@ import { signToken } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
+  try {
   const { name, email, password, schoolName } = await req.json();
   if (!name || !email || !password) return err("Name, email, and password are required.", 400);
 
@@ -44,4 +45,8 @@ export async function POST(req: NextRequest) {
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     },
   }, 201);
+  } catch (e) {
+    console.error("[register]", e);
+    return err("Something went wrong. Please try again.", 500);
+  }
 }

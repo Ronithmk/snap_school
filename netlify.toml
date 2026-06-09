@@ -1,5 +1,5 @@
 [build]
-  command   = "cp prisma/schema.prod.prisma prisma/schema.prisma && prisma generate && next build"
+  command   = "cp prisma/schema.prod.prisma prisma/schema.prisma && prisma generate && prisma db push --skip-generate && next build"
   publish   = ".next"
 
 [build.environment]
