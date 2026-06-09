@@ -2,16 +2,22 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontFooter, StorefrontHeader } from "@/components/storefront/storefront-chrome";
 import { ScreenshotGuard } from "@/components/storefront/screenshot-guard";
-import { schoolsService } from "@/services";
+import { db } from "@/lib/db";
+import { formatDbSchool } from "@/lib/format-school";
 
 interface TenantLayoutProps {
   children: React.ReactNode;
   params: Promise<{ school: string }>;
 }
 
+async function getSchool(slug: string) {
+  const row = await db.school.findUnique({ where: { slug } });
+  return row ? formatDbSchool(row) : null;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ school: string }> }): Promise<Metadata> {
   const { school: slug } = await params;
-  const school = await schoolsService.getBySlug(slug);
+  const school = await getSchool(slug);
   if (!school) return {};
 
   return {
@@ -23,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ school: s
 /** Resolves the tenant by its slug for every page under `/[school]` and renders the shared storefront chrome. */
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
   const { school: slug } = await params;
-  const school = await schoolsService.getBySlug(slug);
+  const school = await getSchool(slug);
 
   if (!school || school.status !== "active") {
     notFound();

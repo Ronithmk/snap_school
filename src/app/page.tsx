@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SchoolFinder } from "@/components/storefront/school-finder";
-import { schoolsService } from "@/services";
+import { db } from "@/lib/db";
+import { formatDbSchool } from "@/lib/format-school";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
+import type { School } from "@/types";
 
 export const revalidate = 300;
 
@@ -18,7 +20,21 @@ const HIGHLIGHTS = [
 ];
 
 export default async function HomePage() {
-  const { data: schools } = await schoolsService.list({ pageSize: 6 });
+  let schools: School[] = [];
+  try {
+    const [rawSchools, albumCounts] = await Promise.all([
+      db.school.findMany({
+        where: { status: "active" },
+        orderBy: { name: "asc" },
+        take: 6,
+      }),
+      db.album.groupBy({ by: ["schoolId"], _count: true }),
+    ]);
+    const albumMap = Object.fromEntries(albumCounts.map((a) => [a.schoolId, a._count]));
+    schools = rawSchools.map((s) => formatDbSchool(s, { albumCount: albumMap[s.id] ?? 0 }));
+  } catch {
+    // DB not reachable at build time — ISR will populate on first request
+  }
 
   return (
     <div className="flex flex-1 flex-col">
