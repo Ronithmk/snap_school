@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontFooter, StorefrontHeader } from "@/components/storefront/storefront-chrome";
+import { ScreenshotGuard } from "@/components/storefront/screenshot-guard";
 import { schoolsService } from "@/services";
 
 interface TenantLayoutProps {
@@ -30,6 +31,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   return (
     <div className="flex min-h-svh flex-col">
+      <ScreenshotGuard />
       <StorefrontHeader school={school} />
       <main className="flex-1">{children}</main>
       <StorefrontFooter school={school} />

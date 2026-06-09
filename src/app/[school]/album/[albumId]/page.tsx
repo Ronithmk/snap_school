@@ -7,6 +7,7 @@ import { ChevronRight, Minus, Plus, Search, ShoppingCart } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
+import { WatermarkOverlay } from "@/components/storefront/watermark-overlay";
 import { useAlbum } from "@/hooks/use-albums";
 import { useAlbumCart } from "@/hooks/use-cart";
 import { useDefaultPriceListForSchool, usePriceLists } from "@/hooks/use-pricing";
@@ -16,6 +17,7 @@ import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
 import type { PriceListItem } from "@/types";
+import type { WatermarkSettings } from "@/types/tenant";
 
 interface AlbumGalleryPageProps {
   params: Promise<{ school: string; albumId: string }>;
@@ -164,7 +166,11 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
         </nav>
 
         {selectedItem ? (
-          <ProductPreview item={selectedItem} coverUrl={album.coverImageUrl} />
+          <ProductPreview
+            item={selectedItem}
+            coverUrl={album.coverImageUrl}
+            watermark={school.settings?.watermark}
+          />
         ) : null}
       </main>
 
@@ -268,32 +274,34 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
 
 // ── Product Preview ──────────────────────────────────────────────────────────
 
-function ProductPreview({ item, coverUrl }: { item: PriceListItem; coverUrl: string }) {
+function ProductPreview({
+  item,
+  coverUrl,
+  watermark,
+}: {
+  item: PriceListItem;
+  coverUrl: string;
+  watermark?: WatermarkSettings;
+}) {
   const imageUrl = item.previewImageUrl ?? coverUrl;
 
   return (
     <div className="flex max-w-2xl flex-col items-center gap-5 px-8 py-6 text-center">
       {/* Mockup image */}
-      <div className="relative w-full max-w-[480px] overflow-hidden rounded-lg shadow-2xl">
+      <div
+        data-protected
+        className="relative w-full max-w-[480px] overflow-hidden rounded-lg shadow-2xl"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           alt={item.name}
-          className="w-full object-contain"
+          draggable={false}
+          className="w-full select-none object-contain"
           style={{ maxHeight: "58vh" }}
+          onDragStart={(e) => e.preventDefault()}
         />
-        {/* Diagonal watermark */}
-        <div
-          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          aria-hidden="true"
-        >
-          <span
-            className="select-none whitespace-nowrap text-[clamp(10px,2.5vw,20px)] font-bold uppercase tracking-[0.3em] text-white/20"
-            style={{ transform: "rotate(-30deg)", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}
-          >
-            NE PAS REPRODUIRE
-          </span>
-        </div>
+        <WatermarkOverlay watermark={watermark} />
       </div>
 
       {/* Product name + description */}

@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Check, ExternalLink, Globe, ImageIcon, Loader2, Palette,
+  Check, ExternalLink, Globe, ImageIcon, Layers, Loader2, Palette,
   ToggleLeft, ToggleRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
@@ -12,8 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WatermarkOverlay } from "@/components/storefront/watermark-overlay";
 import { useSchool, useUpdateSchool } from "@/hooks/use-tenant";
 import { routes } from "@/config/routes";
+import { cn } from "@/lib/utils";
+import type { WatermarkSettings } from "@/types/tenant";
 
 interface Props { params: Promise<{ schoolId: string }> }
 
@@ -54,6 +57,14 @@ export default function BrandingPage({ params }: Props) {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [saved, setSaved] = useState(false);
 
+  // Watermark
+  const [wmEnabled, setWmEnabled] = useState(false);
+  const [wmLineCount, setWmLineCount] = useState<1 | 2 | 3>(1);
+  const [wmLines, setWmLines] = useState<string[]>(["", "", ""]);
+  const [wmOpacity, setWmOpacity] = useState(0.20);
+  const [wmPattern, setWmPattern] = useState<WatermarkSettings["pattern"]>("diagonal");
+  const [wmColor, setWmColor] = useState<WatermarkSettings["color"]>("white");
+
   useEffect(() => {
     if (school) {
       setLogoUrl(school.logoUrl ?? undefined);
@@ -65,6 +76,17 @@ export default function BrandingPage({ params }: Props) {
       setWhatsappNumber(school.settings?.whatsappNumber ?? "");
       setInstagramUrl(school.settings?.instagramUrl ?? "");
       setFacebookUrl(school.settings?.facebookUrl ?? "");
+      const wm = school.settings?.watermark;
+      if (wm) {
+        setWmEnabled(wm.enabled);
+        const count = Math.min(3, Math.max(1, wm.lines.length || 1)) as 1 | 2 | 3;
+        setWmLineCount(count);
+        const padded = [...wm.lines, "", "", ""].slice(0, 3);
+        setWmLines(padded);
+        setWmOpacity(wm.opacity ?? 0.20);
+        setWmPattern(wm.pattern ?? "diagonal");
+        setWmColor(wm.color ?? "white");
+      }
     }
   }, [school]);
 
@@ -85,11 +107,27 @@ export default function BrandingPage({ params }: Props) {
           whatsappNumber: whatsappNumber || undefined,
           instagramUrl: instagramUrl || undefined,
           facebookUrl: facebookUrl || undefined,
+          watermark: {
+            enabled: wmEnabled,
+            lines: wmLines.slice(0, wmLineCount).filter(Boolean),
+            opacity: wmOpacity,
+            pattern: wmPattern,
+            color: wmColor,
+          },
         },
       },
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  // Computed watermark for live preview
+  const previewWatermark: WatermarkSettings = {
+    enabled: wmEnabled,
+    lines: wmLines.slice(0, wmLineCount).filter(Boolean),
+    opacity: wmOpacity,
+    pattern: wmPattern,
+    color: wmColor,
   };
 
   const effectiveColor = customColor || primaryColor;
@@ -251,6 +289,150 @@ export default function BrandingPage({ params }: Props) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Watermark */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Layers className="h-4 w-4" />
+                Photo Watermark
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Enable watermark on previews</p>
+                  <p className="text-xs text-muted-foreground">Shown on storefront previews only — purchased HD files are never watermarked</p>
+                </div>
+                <button type="button" onClick={() => setWmEnabled((v) => !v)}>
+                  {wmEnabled
+                    ? <ToggleRight className="h-7 w-7 text-primary" />
+                    : <ToggleLeft className="h-7 w-7 text-muted-foreground" />}
+                </button>
+              </div>
+
+              {wmEnabled && (
+                <>
+                  {/* Number of lines */}
+                  <div className="space-y-1.5">
+                    <Label>Number of text lines</Label>
+                    <div className="flex gap-2">
+                      {([1, 2, 3] as const).map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setWmLineCount(n)}
+                          className={cn(
+                            "flex-1 rounded-md border py-2 text-sm font-medium transition-colors",
+                            wmLineCount === n
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "hover:bg-accent",
+                          )}
+                        >
+                          {n} line{n > 1 ? "s" : ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Line text inputs */}
+                  <div className="space-y-2">
+                    <Label>Watermark text</Label>
+                    {Array.from({ length: wmLineCount }).map((_, i) => (
+                      <Input
+                        key={i}
+                        value={wmLines[i] ?? ""}
+                        onChange={(e) => {
+                          const next = [...wmLines];
+                          next[i] = e.target.value;
+                          setWmLines(next);
+                        }}
+                        placeholder={
+                          i === 0
+                            ? school?.name ?? "School Name"
+                            : i === 1
+                            ? "DO NOT REPRODUCE"
+                            : `© ${new Date().getFullYear()}`
+                        }
+                      />
+                    ))}
+                  </div>
+
+                  {/* Layout pattern */}
+                  <div className="space-y-1.5">
+                    <Label>Layout</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { value: "diagonal", label: "Diagonal" },
+                          { value: "tiled", label: "Tiled" },
+                          { value: "center", label: "Center" },
+                        ] as const
+                      ).map(({ value, label }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setWmPattern(value)}
+                          className={cn(
+                            "rounded-md border py-2 text-xs font-medium transition-colors",
+                            wmPattern === value
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "hover:bg-accent",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color */}
+                  <div className="space-y-1.5">
+                    <Label>Text colour</Label>
+                    <div className="flex gap-2">
+                      {(
+                        [
+                          { value: "white", label: "White", dot: "bg-white border border-neutral-300" },
+                          { value: "black", label: "Black", dot: "bg-neutral-900" },
+                        ] as const
+                      ).map(({ value, label, dot }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setWmColor(value)}
+                          className={cn(
+                            "flex flex-1 items-center gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                            wmColor === value ? "ring-2 ring-primary border-primary" : "hover:bg-accent",
+                          )}
+                        >
+                          <span className={cn("h-4 w-4 rounded-full", dot)} />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Opacity slider */}
+                  <div className="space-y-1.5">
+                    <Label>Opacity — {Math.round(wmOpacity * 100)}%</Label>
+                    <input
+                      type="range"
+                      min={5}
+                      max={40}
+                      step={1}
+                      value={Math.round(wmOpacity * 100)}
+                      onChange={(e) => setWmOpacity(parseInt(e.target.value) / 100)}
+                      className="w-full accent-primary"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>Subtle (5%)</span>
+                      <span>Bold (40%)</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* ── Right column: live preview ─── */}
@@ -319,6 +501,27 @@ export default function BrandingPage({ params }: Props) {
               {showPoweredBy && <span className="ml-1 opacity-50">· Powered by SnapSchool</span>}
             </div>
           </div>
+
+          {/* Watermark preview */}
+          {wmEnabled && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Watermark preview</p>
+              <div className="relative overflow-hidden rounded-xl border shadow-sm" style={{ aspectRatio: "4/3" }}>
+                {/* Simulated photo background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-neutral-300 via-neutral-400 to-neutral-600" />
+                {/* Fake image content lines */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-20">
+                  {[80, 60, 70].map((w, i) => (
+                    <div key={i} className="h-3 rounded-full bg-white" style={{ width: `${w}%` }} />
+                  ))}
+                </div>
+                <WatermarkOverlay watermark={previewWatermark} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                This is how the watermark will appear on photo previews in the storefront.
+              </p>
+            </div>
+          )}
 
           {saved && (
             <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">

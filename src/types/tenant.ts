@@ -22,6 +22,18 @@ export interface TaxSettings {
   inclusive: boolean;
 }
 
+export interface WatermarkSettings {
+  enabled: boolean;
+  /** 1–3 lines of text rendered on preview images */
+  lines: string[];
+  /** Opacity of the watermark text — 0.05 to 0.40 */
+  opacity: number;
+  /** How the text is laid out over the image */
+  pattern: "diagonal" | "tiled" | "center";
+  /** Text colour — white works on dark photos, black on light */
+  color: "white" | "black";
+}
+
 export interface SchoolSettings {
   countryCode: string;
   currencyCode: string;
@@ -42,6 +54,8 @@ export interface SchoolSettings {
   // ── Language ─────────────────────────────────────────────────
   /** Default storefront locale for parents visiting this school's portal. */
   defaultLocale?: string;
+  // ── Watermark ─────────────────────────────────────────────────
+  watermark?: WatermarkSettings;
 }
 
 export type SchoolStatus = "active" | "inactive" | "archived";
