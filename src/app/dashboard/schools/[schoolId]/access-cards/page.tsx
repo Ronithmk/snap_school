@@ -6,7 +6,6 @@ import { ChevronRight, Printer, Users } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +15,45 @@ import { useSchoolClasses, useSchoolAlbums } from "@/hooks/use-albums";
 import { useStudents } from "@/hooks/use-students";
 import { routes } from "@/config/routes";
 import type { Student } from "@/types";
+
+type PaperSize = "A5" | "A4" | "A3";
+type CardsPerPage = 1 | 2 | 4;
+
+const VALID_CARDS_PER_PAGE: Record<PaperSize, CardsPerPage[]> = {
+  A5: [1],
+  A4: [1, 2],
+  A3: [2, 4],
+};
+
+const CARD_W = 148; // mm
+const CARD_H = 210; // mm
+
+function getPrintLayout(paperSize: PaperSize, cpp: CardsPerPage) {
+  const margin = 6;
+  const gap = 4;
+  const baseDims: Record<PaperSize, [number, number]> = {
+    A5: [148, 210],
+    A4: [210, 297],
+    A3: [297, 420],
+  };
+  let [pW, pH] = baseDims[paperSize];
+  let cols = 1, rows = 1, orientation = "portrait";
+
+  if (cpp === 2) {
+    if (paperSize === "A4") { [pW, pH] = [pH, pW]; orientation = "landscape"; }
+    cols = 2;
+  } else if (cpp === 4) {
+    cols = 2; rows = 2;
+  }
+
+  const availW = pW - margin * 2;
+  const availH = pH - margin * 2;
+  const cellW = (availW - (cols - 1) * gap) / cols;
+  const cellH = (availH - (rows - 1) * gap) / rows;
+  const scale = Math.min(1, cellW / CARD_W, cellH / CARD_H);
+
+  return { pW, pH, cols, rows, orientation, cellW, cellH, scale, margin, gap };
+}
 
 interface AccessCardsPageProps {
   params: Promise<{ schoolId: string }>;
@@ -30,7 +68,15 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [orderClosingDate, setOrderClosingDate] = useState<string>("");
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
+  const [paperSize, setPaperSize] = useState<PaperSize>("A5");
+  const [cardsPerPage, setCardsPerPage] = useState<CardsPerPage>(1);
   const printRef = useRef<HTMLDivElement>(null);
+
+  function handlePaperSizeChange(size: PaperSize) {
+    setPaperSize(size);
+    const valid = VALID_CARDS_PER_PAGE[size];
+    if (!valid.includes(cardsPerPage)) setCardsPerPage(valid[0]);
+  }
 
   const { data: students, isLoading: studentsLoading } = useStudents(
     schoolId,
@@ -71,61 +117,60 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
     const container = printRef.current;
     if (!container) return;
 
+    const cardEls = Array.from(container.children);
+    if (cardEls.length === 0) return;
+
     const win = window.open("", "_blank");
     if (!win) {
       alert("Pop-up blocked. Please allow pop-ups for this site and try again.");
       return;
     }
 
-    win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Access Cards</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #fff; font-family: Arial, Helvetica, sans-serif; }
-    @page { size: A5 portrait; margin: 8mm; }
-    .access-card-page {
-      page-break-after: always;
-      break-after: page;
-      width: 148mm;
-      min-height: 210mm;
+    const layout = getPrintLayout(paperSize, cardsPerPage);
+    const { pW, pH, cellW, cellH, scale, margin, gap } = layout;
+    const pageAvailW = pW - margin * 2;
+
+    // Group cards into pages of `cardsPerPage`
+    const pages: Element[][] = [];
+    for (let i = 0; i < cardEls.length; i += cardsPerPage) {
+      pages.push(cardEls.slice(i, i + cardsPerPage));
     }
-    @media print {
-      .access-card-page { border: none !important; }
-    }
-  </style>
-</head>
-<body>${container.innerHTML}</body>
-</html>`);
+
+    const bodyHTML = pages.map((page) => {
+      const cells = page.map((card) =>
+        `<div style="width:${cellW.toFixed(2)}mm;height:${cellH.toFixed(2)}mm;overflow:hidden;flex-shrink:0;">` +
+        `<div style="transform:scale(${scale.toFixed(4)});transform-origin:top left;">` +
+        card.outerHTML +
+        `</div></div>`
+      ).join("");
+      return (
+        `<div style="display:flex;flex-wrap:wrap;width:${pageAvailW.toFixed(2)}mm;` +
+        `gap:${gap}mm;page-break-after:always;break-after:page;">` +
+        cells +
+        `</div>`
+      );
+    }).join("");
+
+    win.document.write(
+      `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Access Cards</title>` +
+      `<style>* { box-sizing: border-box; margin: 0; padding: 0; }` +
+      `body { background: #fff; font-family: Arial, Helvetica, sans-serif; }` +
+      `@page { size: ${pW}mm ${pH}mm; margin: ${margin}mm; }` +
+      `@media print { * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }` +
+      `.access-card-page { border: none !important; } }` +
+      `</style></head><body>${bodyHTML}</body></html>`
+    );
     win.document.close();
 
-    // Wait for images (QR codes, photos) to fully load before printing
     const images = Array.from(win.document.querySelectorAll("img"));
-    if (images.length === 0) {
-      win.focus();
-      win.print();
-      win.close();
-      return;
-    }
-
+    if (images.length === 0) { win.focus(); win.print(); win.close(); return; }
     let remaining = images.length;
     function tryPrint() {
       remaining -= 1;
-      if (remaining === 0) {
-        win!.focus();
-        win!.print();
-        win!.close();
-      }
+      if (remaining === 0) { win!.focus(); win!.print(); win!.close(); }
     }
     images.forEach((img) => {
-      if (img.complete) {
-        tryPrint();
-      } else {
-        img.onload = tryPrint;
-        img.onerror = tryPrint;
-      }
+      if (img.complete) tryPrint(); else { img.onload = tryPrint; img.onerror = tryPrint; }
     });
   }
 
@@ -228,6 +273,38 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
               onChange={(e) => setOrderClosingDate(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Paper size
+            </label>
+            <Select
+              value={paperSize}
+              onChange={(e) => handlePaperSizeChange(e.target.value as PaperSize)}
+              containerClassName="w-24"
+            >
+              <option value="A5">A5</option>
+              <option value="A4">A4</option>
+              <option value="A3">A3</option>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Cards per page
+            </label>
+            <Select
+              value={String(cardsPerPage)}
+              onChange={(e) => setCardsPerPage(Number(e.target.value) as CardsPerPage)}
+              containerClassName="w-36"
+            >
+              {VALID_CARDS_PER_PAGE[paperSize].map((n) => (
+                <option key={n} value={String(n)}>
+                  {n === 1 ? "1 per page" : `${n} per page`}
+                </option>
+              ))}
+            </Select>
           </div>
         </div>
 
