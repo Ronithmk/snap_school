@@ -2,14 +2,12 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["sharp"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "**.cloudflare.com" },
     ],
-  },
-  experimental: {
-    serverComponentsExternalPackages: ["sharp"],
   },
 };
 
@@ -19,6 +17,4 @@ export default withSentryConfig(nextConfig, {
   silent: true,
   widenClientFileUpload: true,
   sourcemaps: { disable: true },
-  disableLogger: true,
-  automaticVercelMonitors: true,
 });

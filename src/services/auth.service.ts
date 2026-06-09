@@ -17,7 +17,8 @@ const mockRegisteredUsers: (typeof MOCK_USERS[number])[] = [];
 const mockResetTokens: Record<string, string> = {}; // token → userId
 
 function buildSession(userId: string): Session {
-  const found = [...MOCK_USERS, ...mockRegisteredUsers].find((u) => u.id === userId)!;
+  const found = [...MOCK_USERS, ...mockRegisteredUsers].find((u) => u.id === userId);
+  if (!found) throw new Error("Session build failed: user not found.");
   const { password: _password, ...user } = found;
   return {
     user,

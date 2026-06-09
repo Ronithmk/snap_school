@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -35,7 +35,7 @@ model School {
   bannerUrl     String?
   description   String?
   status        String         @default("active")
-  settings      String         @default("{}")
+  settings      Json           @default("{}")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   admins        SchoolAdmin[]
@@ -168,10 +168,10 @@ model Order {
   customerName      String
   customerEmail     String
   status            String   @default("pending_payment")
-  items             String   @default("[]")
-  totals            String   @default("{}")
+  items             Json     @default("[]")
+  totals            Json     @default("{}")
   shippingMethodId  String?
-  shippingAddress   String?
+  shippingAddress   Json?
   countryCode       String   @default("IN")
   razorpayOrderId   String?
   razorpayPaymentId String?
