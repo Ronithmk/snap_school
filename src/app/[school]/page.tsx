@@ -42,11 +42,11 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
         <h2 className="text-lg font-semibold tracking-tight">Classes</h2>
         {isClassesLoading || !classes ? (
           <SkeletonGrid count={4} />
-        ) : classes.data.length === 0 ? (
+        ) : classes.length === 0 ? (
           <EmptyState title="No classes published yet" description="Check back soon — this school hasn't published any classes." />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {classes.data.map((schoolClass) => (
+            {classes.map((schoolClass) => (
               <ClassCard key={schoolClass.id} school={school} schoolClass={schoolClass} />
             ))}
           </div>

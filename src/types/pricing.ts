@@ -27,6 +27,7 @@ export interface BulkDiscountTier {
 
 export interface PriceList {
   id: ID;
+  schoolId: ID;
   name: string;
   countryCode: string;
   currencyCode: string;
@@ -37,6 +38,7 @@ export interface PriceList {
 }
 
 export interface CreatePriceListInput {
+  schoolId: ID;
   name: string;
   countryCode: string;
   currencyCode: string;

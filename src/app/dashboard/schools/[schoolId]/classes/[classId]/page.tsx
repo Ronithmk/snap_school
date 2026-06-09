@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, ImageIcon, Pencil, Plus } from "lucide-react";
+import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, Pencil, Plus, ShoppingCart } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -142,6 +142,11 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
         </div>
       )}
 
+      {/* Access links table — like the "Access the maps" view */}
+      {albums && albums.data.length > 0 ? (
+        <AccessLinksTable albums={albums.data} school={school} schoolId={schoolId} />
+      ) : null}
+
       <ClassFormSheet open={editOpen} onOpenChange={setEditOpen} schoolId={schoolId} schoolClass={schoolClass} />
       <AlbumFormSheet
         open={createAlbumOpen}
@@ -150,6 +155,107 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
         classes={classes ?? []}
         defaultClassId={classId}
       />
+    </div>
+  );
+}
+
+function AccessLinksTable({
+  albums,
+  school,
+  schoolId,
+}: {
+  albums: import("@/types").Album[];
+  school: import("@/types").School;
+  schoolId: string;
+}) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  function copy(key: string, text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    });
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-base font-semibold tracking-tight">Access links</h2>
+      <p className="text-sm text-muted-foreground">
+        Each album has its own unique gallery and cart link — copy and share them directly with students or families.
+      </p>
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Album</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Gallery link</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cart / Order link</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            {albums.map((album) => {
+              const galleryUrl = `${origin}${album.shareUrl}`;
+              const cartUrl = `${origin}${album.shareUrl}/cart`;
+              return (
+                <tr key={album.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <Link href={routes.dashboard.album(schoolId, album.id)} className="font-medium text-sm hover:underline">
+                      {album.title}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{album.photoCount} photos</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="max-w-[180px] truncate text-xs text-muted-foreground">{galleryUrl}</span>
+                      <button
+                        type="button"
+                        onClick={() => copy(`gallery-${album.id}`, galleryUrl)}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        title="Copy gallery link"
+                      >
+                        {copiedKey === `gallery-${album.id}` ? (
+                          <Check className="h-3.5 w-3.5 text-positive" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="max-w-[180px] truncate text-xs text-muted-foreground">{cartUrl}</span>
+                      <button
+                        type="button"
+                        onClick={() => copy(`cart-${album.id}`, cartUrl)}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        title="Copy cart link"
+                      >
+                        {copiedKey === `cart-${album.id}` ? (
+                          <Check className="h-3.5 w-3.5 text-positive" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <Link href={galleryUrl} target="_blank" rel="noreferrer" title="Open gallery" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Link>
+                      <Link href={cartUrl} target="_blank" rel="noreferrer" title="Open cart" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

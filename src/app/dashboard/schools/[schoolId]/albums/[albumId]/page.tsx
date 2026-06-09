@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronRight, ExternalLink, ImageIcon, Pencil, Trash2 } from "lucide-react";
+import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, Link2, Pencil, ShoppingCart, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +150,9 @@ export default function AlbumDetailPage({ params }: AlbumDetailPageProps) {
         </CardContent>
       </Card>
 
+      {/* Share & Access Links */}
+      <AlbumAccessLinksCard album={album} school={school} />
+
       <div className="space-y-3">
         <h2 className="text-lg font-semibold tracking-tight">Upload photos</h2>
         <PhotoUploadDropzone albumId={album.id} />
@@ -199,6 +202,101 @@ export default function AlbumDetailPage({ params }: AlbumDetailPageProps) {
       </div>
 
       <AlbumFormSheet open={editOpen} onOpenChange={setEditOpen} schoolId={schoolId} classes={classes ?? []} album={album} />
+    </div>
+  );
+}
+
+function AlbumAccessLinksCard({ album, school }: { album: import("@/types").Album; school: import("@/types").School }) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const galleryUrl = `${origin}${album.shareUrl}`;
+  const cartUrl = `${origin}${album.shareUrl}/cart`;
+
+  function copy(key: string, text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    });
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-5">
+        <div className="flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold">Share &amp; access links</h2>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Share these links with students and families. Each album has its own unique gallery and cart URL — copy and distribute them directly.
+        </p>
+
+        <div className="space-y-3">
+          <LinkRow
+            icon={ExternalLink}
+            label="Gallery link"
+            url={galleryUrl}
+            copied={copiedKey === "gallery"}
+            onCopy={() => copy("gallery", galleryUrl)}
+          />
+          <LinkRow
+            icon={ShoppingCart}
+            label="Cart / order link"
+            url={cartUrl}
+            copied={copiedKey === "cart"}
+            onCopy={() => copy("cart", cartUrl)}
+          />
+          {album.passwordProtected ? (
+            <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+              This album is password-protected — share the password separately.
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-2 border-t border-border pt-3">
+          <Link href={galleryUrl} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open gallery
+          </Link>
+          <Link href={cartUrl} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Open cart
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LinkRow({
+  icon: Icon,
+  label,
+  url,
+  copied,
+  onCopy,
+}: {
+  icon: React.ElementType;
+  label: string;
+  url: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="truncate text-xs font-medium">{url}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onCopy}
+        title="Copy link"
+        className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {copied ? <Check className="h-3.5 w-3.5 text-positive" /> : <Copy className="h-3.5 w-3.5" />}
+      </button>
     </div>
   );
 }

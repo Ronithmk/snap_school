@@ -85,7 +85,7 @@ interface AlbumFormSheetProps {
 
 export function AlbumFormSheet({ open, onOpenChange, schoolId, classes, defaultClassId, album = null, onSaved }: AlbumFormSheetProps) {
   const isEdit = !!album;
-  const { data: priceLists } = usePriceLists();
+  const { data: priceLists } = usePriceLists(schoolId);
   const createAlbum = useCreateAlbum(schoolId);
   const updateAlbum = useUpdateAlbum(schoolId);
   const isSaving = createAlbum.isPending || updateAlbum.isPending;

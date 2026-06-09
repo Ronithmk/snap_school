@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -55,9 +56,17 @@ export function LoginForm() {
     }
   });
 
-  function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setValue("email", account.email);
-    setValue("password", account.password);
+  async function loginAsDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
+    setValue("email", account.email, { shouldValidate: true });
+    setValue("password", account.password, { shouldValidate: true });
+    setServerError(null);
+    try {
+      await login.mutateAsync({ email: account.email, password: account.password });
+      toast.success("Welcome back!");
+      router.push(searchParams.get("from") ?? routes.dashboard.root());
+    } catch (err) {
+      setServerError((err as ApiError).message ?? t("auth.invalidCredentials"));
+    }
   }
 
   return (
@@ -69,7 +78,12 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{t("auth.password")}</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">{t("auth.password")}</Label>
+          <Link href={routes.forgotPassword()} className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+            Forgot password?
+          </Link>
+        </div>
         <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••" {...register("password")} />
         {errors.password ? <p className="text-sm text-destructive">{errors.password.message}</p> : null}
       </div>
@@ -85,6 +99,13 @@ export function LoginForm() {
         {t("auth.submit")}
       </Button>
 
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href={routes.register()} className="font-medium text-foreground underline-offset-2 hover:underline">
+          Create account
+        </Link>
+      </p>
+
       <div className="rounded-lg border border-dashed border-border p-3">
         <p className="text-xs font-medium text-muted-foreground">Demo accounts (mock auth)</p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -92,8 +113,9 @@ export function LoginForm() {
             <button
               key={account.email}
               type="button"
-              onClick={() => fillDemo(account)}
-              className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent"
+              onClick={() => loginAsDemo(account)}
+              disabled={login.isPending}
+              className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-50"
             >
               {account.label}
             </button>

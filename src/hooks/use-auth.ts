@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/services";
 import { useAuthStore } from "@/stores/auth.store";
-import type { LoginCredentials } from "@/types";
+import type { ForgotPasswordInput, LoginCredentials, RegisterInput, ResetPasswordInput } from "@/types";
 
 const SESSION_QUERY_KEY = ["session"] as const;
 
@@ -54,4 +54,29 @@ export function useLogout() {
     clearSession();
     queryClient.setQueryData(SESSION_QUERY_KEY, null);
   };
+}
+
+export function useRegister() {
+  const setSession = useAuthStore((s) => s.setSession);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: RegisterInput) => authService.register(input),
+    onSuccess: ({ session }) => {
+      setSession(session);
+      queryClient.setQueryData(SESSION_QUERY_KEY, session);
+    },
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (input: ForgotPasswordInput) => authService.forgotPassword(input),
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (input: ResetPasswordInput) => authService.resetPassword(input),
+  });
 }

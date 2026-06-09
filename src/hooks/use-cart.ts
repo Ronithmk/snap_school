@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useCartStore } from "@/stores/cart.store";
 import { computeCartTotals } from "@/lib/cart-totals";
-import type { AppliedCoupon, CartLineItem, School, ShippingMethodId } from "@/types";
+import type { AlbumCart, AppliedCoupon, CartLineItem, School, ShippingMethodId } from "@/types";
 
 /**
  * Scopes the shared cart store to a single album, matching the "separate cart per album"
@@ -13,7 +13,18 @@ export function useAlbumCart(school: School | null | undefined, albumId: string)
   const schoolId = school?.id ?? "";
   const currencyCode = school?.settings.currencyCode ?? "USD";
 
-  const cart = useCartStore((s) => (schoolId ? s.getCart(schoolId, albumId, currencyCode) : null));
+  // Select the stored cart by key — returns a stable reference or undefined (never a new object).
+  // Calling getCart() inside the selector would call emptyCart() on every render, creating a new
+  // object reference each time; Zustand's getSnapshot equality check then detects a false change → infinite loop.
+  const storedCart = useCartStore((s) => s.carts[`${schoolId}:${albumId}`] ?? null);
+
+  // Memoize the empty-cart fallback so it doesn't produce a new reference on every render.
+  const emptyCart = useMemo<AlbumCart | null>(
+    () => (schoolId ? { schoolId, albumId, currencyCode, items: [], coupon: null, shippingMethodId: null } : null),
+    [schoolId, albumId, currencyCode],
+  );
+
+  const cart = storedCart ?? emptyCart;
   const addItem = useCartStore((s) => s.addItem);
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);

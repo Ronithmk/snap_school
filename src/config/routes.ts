@@ -4,6 +4,9 @@
 export const routes = {
   home: () => "/",
   login: () => "/auth/login",
+  register: () => "/auth/register",
+  forgotPassword: () => "/auth/forgot-password",
+  resetPassword: (token?: string) => token ? `/auth/reset-password?token=${token}` : "/auth/reset-password",
 
   dashboard: {
     root: () => "/dashboard",
@@ -15,6 +18,7 @@ export const routes = {
     class: (schoolId: string, classId: string) => `/dashboard/schools/${schoolId}/classes/${classId}`,
     album: (schoolId: string, albumId: string) => `/dashboard/schools/${schoolId}/albums/${albumId}`,
     priceLists: () => "/dashboard/price-lists",
+    accessCards: (schoolId: string) => `/dashboard/schools/${schoolId}/access-cards`,
     lab: () => "/dashboard/lab",
     labProducts: () => "/dashboard/lab/products",
     labEditor: (productId: string) => `/dashboard/lab/editor/${productId}`,

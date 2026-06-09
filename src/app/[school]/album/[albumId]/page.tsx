@@ -3,20 +3,19 @@
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ShoppingCart } from "lucide-react";
+import { ChevronRight, Minus, Plus, Search, ShoppingCart } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
-import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PhotoGrid } from "@/components/storefront/photo-grid";
+import { buttonVariants } from "@/components/ui/button";
 import { useAlbum } from "@/hooks/use-albums";
 import { useAlbumCart } from "@/hooks/use-cart";
-import { useDefaultPriceListForCountry, usePriceLists } from "@/hooks/use-pricing";
+import { useDefaultPriceListForSchool, usePriceLists } from "@/hooks/use-pricing";
 import { useSchoolBySlug } from "@/hooks/use-tenant";
 import { hasAlbumAccess } from "@/lib/album-access";
-import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
+import { cn } from "@/lib/utils";
+import type { PriceListItem } from "@/types";
 
 interface AlbumGalleryPageProps {
   params: Promise<{ school: string; albumId: string }>;
@@ -25,13 +24,15 @@ interface AlbumGalleryPageProps {
 export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   const { school: schoolSlug, albumId } = use(params);
   const router = useRouter();
+
   const { data: school, isLoading: isSchoolLoading } = useSchoolBySlug(schoolSlug);
   const { data: album, isLoading: isAlbumLoading } = useAlbum(albumId);
-  const { data: priceLists } = usePriceLists();
-  const { data: defaultPriceList } = useDefaultPriceListForCountry(school?.settings.countryCode);
-  const { cart, addItem } = useAlbumCart(school, albumId);
+  const { data: priceLists } = usePriceLists(school?.id);
+  const { data: defaultPriceList } = useDefaultPriceListForSchool(school?.id);
+  const { cart, addItem, removeItem, updateQuantity } = useAlbumCart(school, albumId);
 
   const [accessChecked, setAccessChecked] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState("");
 
   useEffect(() => {
     if (!album) return;
@@ -45,68 +46,293 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   const priceList = useMemo(() => {
     if (!album) return null;
     if (album.pricing.priceListId) {
-      return priceLists?.find((list) => list.id === album.pricing.priceListId) ?? defaultPriceList ?? null;
+      return priceLists?.find((l) => l.id === album.pricing.priceListId) ?? defaultPriceList ?? null;
     }
     return defaultPriceList ?? null;
   }, [album, priceLists, defaultPriceList]);
 
-  const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  // Auto-select first item when price list loads
+  useEffect(() => {
+    if (priceList?.items.length && !selectedItemId) {
+      setSelectedItemId(priceList.items[0].id);
+    }
+  }, [priceList, selectedItemId]);
+
+  const selectedItem = priceList?.items.find((i) => i.id === selectedItemId) ?? priceList?.items[0] ?? null;
+  const currencyCode = priceList?.currencyCode ?? school?.settings.currencyCode ?? "EUR";
+
+  function getItemQty(priceListItemId: string): number {
+    return cart?.items
+      .filter((i) => i.priceListItemId === priceListItemId)
+      .reduce((sum, i) => sum + i.quantity, 0) ?? 0;
+  }
+
+  function setItemQty(item: PriceListItem, newQty: number) {
+    const lines = cart?.items.filter((i) => i.priceListItemId === item.id) ?? [];
+    if (newQty <= 0) {
+      lines.forEach((line) => removeItem(line.id));
+    } else if (lines.length === 0) {
+      addItem({
+        photoId: null,
+        priceListItemId: item.id,
+        name: item.name,
+        unitPrice: item.amount,
+        quantity: newQty,
+        thumbnailUrl: item.previewImageUrl ?? album?.coverImageUrl ?? "",
+      });
+    } else {
+      updateQuantity(lines[0].id, newQty);
+      // Remove excess lines if any
+      lines.slice(1).forEach((line) => removeItem(line.id));
+    }
+  }
+
+  const totalItems = cart?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0;
+  const subtotal = cart?.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0) ?? 0;
+
+  // Items in the left strip = price list items that have qty > 0
+  const cartItems = useMemo(() => {
+    if (!cart || !priceList) return [];
+    return priceList.items.filter((item) => {
+      return cart.items.some((ci) => ci.priceListItemId === item.id && ci.quantity > 0);
+    });
+  }, [cart, priceList]);
 
   if (!isAlbumLoading && album === null) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <EmptyState title="Album not found" description="This album may have been removed, renamed, or made private." />
+        <EmptyState title="Album not found" description="This album may have been removed or made private." />
       </div>
     );
   }
 
   if (isSchoolLoading || isAlbumLoading || !school || !album || !accessChecked) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!priceList || priceList.items.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
-        <Skeleton className="h-4 w-48" />
-        <div className="space-y-3">
-          <Skeleton className="aspect-[3/1] w-full rounded-xl" />
-          <Skeleton className="h-7 w-72" />
-          <Skeleton className="h-4 w-96" />
-        </div>
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+        <EmptyState title="No products available" description="This album doesn't have any products set up yet. Check back soon." />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href={routes.storefront.school(schoolSlug)} className="transition-colors hover:text-foreground">
-          {school.name}
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="truncate text-foreground">{album.title}</span>
-      </nav>
+    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
+      {/* ── Left thumbnail strip ── */}
+      <aside className="hidden w-[88px] flex-shrink-0 flex-col overflow-y-auto border-r border-border bg-background p-1.5 sm:flex">
+        {cartItems.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-1 pt-6 text-center">
+            <ShoppingCart className="h-5 w-5 text-muted-foreground/30" />
+            <p className="text-[9px] leading-tight text-muted-foreground/60">Add items to see them here</p>
+          </div>
+        ) : (
+          cartItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setSelectedItemId(item.id)}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-lg p-1.5 text-center transition-colors hover:bg-accent",
+                selectedItemId === item.id && "ring-2 ring-primary/60 bg-primary/5",
+              )}
+            >
+              <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.previewImageUrl ?? album.coverImageUrl}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="line-clamp-2 text-[9px] leading-tight text-muted-foreground">{item.name}</span>
+            </button>
+          ))
+        )}
+      </aside>
 
-      <div className="relative aspect-[3/1] w-full overflow-hidden rounded-xl bg-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={album.coverImageUrl} alt={album.title} className="h-full w-full object-cover" />
-      </div>
-      <PageHeader
-        title={album.title}
-        description={[album.description, `${album.photoCount} photos`].filter(Boolean).join(" · ")}
-        actions={
+      {/* ── Center product preview ── */}
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+        {/* Breadcrumb */}
+        <nav className="absolute left-4 top-3 flex items-center gap-1 text-xs text-neutral-500">
+          <Link href={routes.storefront.school(schoolSlug)} className="hover:text-foreground transition-colors">
+            {school.name}
+          </Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-neutral-700 dark:text-neutral-300">{album.title}</span>
+        </nav>
+
+        {selectedItem ? (
+          <ProductPreview item={selectedItem} coverUrl={album.coverImageUrl} />
+        ) : null}
+      </main>
+
+      {/* ── Right price list panel ── */}
+      <aside className="flex w-[272px] flex-shrink-0 flex-col border-l border-border bg-background">
+        {/* Scrollable item rows */}
+        <div className="flex-1 divide-y divide-border overflow-y-auto">
+          {priceList.items.map((item) => {
+            const qty = getItemQty(item.id);
+            const isSelected = item.id === selectedItemId;
+            return (
+              <div
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedItemId(item.id)}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedItemId(item.id)}
+                className={cn(
+                  "group flex cursor-pointer items-center gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  isSelected && "bg-primary/5",
+                )}
+              >
+                {/* Name + description */}
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-sm font-medium leading-snug", isSelected && "text-primary")}>
+                    {item.name}
+                  </p>
+                  {item.description ? (
+                    <p className="line-clamp-1 text-[11px] text-muted-foreground">{item.description}</p>
+                  ) : null}
+                </div>
+
+                {/* Qty stepper */}
+                <div
+                  className="flex items-center gap-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    disabled={qty === 0}
+                    onClick={() => setItemQty(item, qty - 1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <Minus className="h-2.5 w-2.5" />
+                  </button>
+                  <span className="w-5 text-center text-sm tabular-nums">{qty}</span>
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() => setItemQty(item, qty + 1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <Plus className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+
+                {/* Price */}
+                <p className="w-14 shrink-0 text-right text-sm font-semibold">
+                  {formatCurrency(item.amount, currencyCode)}
+                </p>
+
+                {/* Preview magnifier */}
+                <button
+                  type="button"
+                  aria-label="Preview"
+                  title="Preview"
+                  onClick={(e) => { e.stopPropagation(); setSelectedItemId(item.id); }}
+                  className="shrink-0 text-muted-foreground/40 transition-all hover:text-primary group-hover:opacity-100 opacity-0"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Subtotal + View Cart */}
+        <div className="border-t border-border p-4">
+          <div className="mb-3 flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              Subtotal ({totalItems} article{totalItems !== 1 ? "s" : ""})
+            </span>
+            <span className="font-bold">{formatCurrency(subtotal, currencyCode)}</span>
+          </div>
           <Link
             href={routes.storefront.cart(schoolSlug, albumId)}
-            className={cn(buttonVariants({ variant: itemCount > 0 ? "default" : "outline" }), "relative")}
+            className={cn(
+              buttonVariants({ variant: totalItems > 0 ? "default" : "outline" }),
+              "w-full justify-center",
+            )}
           >
             <ShoppingCart className="h-4 w-4" />
-            View cart
-            {itemCount > 0 ? (
-              <Badge variant="default" className="ml-1 h-5 min-w-5 justify-center rounded-full px-1.5 text-xs">
-                {itemCount}
-              </Badge>
-            ) : null}
+            View Cart
           </Link>
-        }
-      />
+        </div>
+      </aside>
+    </div>
+  );
+}
 
-      <PhotoGrid albumId={albumId} priceList={priceList} onAddToCart={addItem} />
+// ── Product Preview ──────────────────────────────────────────────────────────
+
+function ProductPreview({ item, coverUrl }: { item: PriceListItem; coverUrl: string }) {
+  const imageUrl = item.previewImageUrl ?? coverUrl;
+
+  return (
+    <div className="flex max-w-2xl flex-col items-center gap-5 px-8 py-6 text-center">
+      {/* Mockup image */}
+      <div className="relative w-full max-w-[480px] overflow-hidden rounded-lg shadow-2xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt={item.name}
+          className="w-full object-contain"
+          style={{ maxHeight: "58vh" }}
+        />
+        {/* Diagonal watermark */}
+        <div
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <span
+            className="select-none whitespace-nowrap text-[clamp(10px,2.5vw,20px)] font-bold uppercase tracking-[0.3em] text-white/20"
+            style={{ transform: "rotate(-30deg)", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}
+          >
+            NE PAS REPRODUIRE
+          </span>
+        </div>
+      </div>
+
+      {/* Product name + description */}
+      <div>
+        <p className="text-xl font-semibold tracking-tight">{item.name}</p>
+        {item.description ? (
+          <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+// ── Loading skeleton ─────────────────────────────────────────────────────────
+
+function LoadingSkeleton() {
+  return (
+    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
+      <div className="hidden w-[88px] border-r bg-background p-1.5 sm:block">
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square w-full rounded-md" />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-1 items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+        <Skeleton className="h-[50vh] w-[36vw] rounded-lg" />
+      </div>
+      <div className="w-[272px] border-l bg-background">
+        <div className="divide-y">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-3 py-3">
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

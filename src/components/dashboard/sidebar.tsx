@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: routes.dashboard.orders(), label: "Orders", icon: Receipt },
   { href: routes.dashboard.schools(), label: "Schools", icon: Building2, roles: ["platform_admin"] },
   { href: routes.dashboard.priceLists(), label: "Price Lists", icon: Tags },
+  { href: routes.dashboard.lab(), label: "Product Lab", icon: Wand2 },
   { href: routes.dashboard.settings(), label: "Settings", icon: Settings },
 ];
 

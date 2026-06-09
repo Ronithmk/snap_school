@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { useCreatePriceList, useUpdatePriceList } from "@/hooks/use-pricing";
+import { usePublishedLabProducts } from "@/hooks/use-lab";
 import { COUNTRIES, getCurrency } from "@/config/currency";
 import type { ApiError, PriceItemType, PriceList } from "@/types";
 
@@ -27,6 +28,8 @@ const itemSchema = z.object({
   description: z.string().optional(),
   amount: z.coerce.number().min(0, "Must be 0 or higher"),
   unitsIncluded: z.coerce.number().optional(),
+  labProductId: z.string().optional(),
+  previewImageUrl: z.string().optional(),
 });
 
 const tierSchema = z.object({
@@ -48,7 +51,7 @@ function defaultsFor(priceList: PriceList | null): FormValues {
     return {
       name: "",
       countryCode: "US",
-      items: [{ type: "digital_download", name: "Digital Download (HD)", description: "", amount: 8, unitsIncluded: undefined }],
+      items: [{ type: "digital_download", name: "Digital Download (HD)", description: "", amount: 8, unitsIncluded: undefined, labProductId: undefined, previewImageUrl: undefined }],
       bulkDiscounts: [],
     };
   }
@@ -61,6 +64,8 @@ function defaultsFor(priceList: PriceList | null): FormValues {
       description: item.description ?? "",
       amount: item.amount,
       unitsIncluded: item.unitsIncluded,
+      labProductId: item.labProductId ?? undefined,
+      previewImageUrl: item.previewImageUrl ?? undefined,
     })),
     bulkDiscounts: priceList.bulkDiscounts.map((tier) => ({ minQuantity: tier.minQuantity, discountPercent: tier.discountPercent })),
   };
@@ -69,14 +74,16 @@ function defaultsFor(priceList: PriceList | null): FormValues {
 interface PriceListFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  schoolId: string;
   priceList?: PriceList | null;
   onSaved?: (priceList: PriceList) => void;
 }
 
-export function PriceListFormSheet({ open, onOpenChange, priceList = null, onSaved }: PriceListFormSheetProps) {
+export function PriceListFormSheet({ open, onOpenChange, schoolId, priceList = null, onSaved }: PriceListFormSheetProps) {
   const isEdit = !!priceList;
-  const createPriceList = useCreatePriceList();
-  const updatePriceList = useUpdatePriceList();
+  const createPriceList = useCreatePriceList(schoolId);
+  const updatePriceList = useUpdatePriceList(schoolId);
+  const { data: labProducts } = usePublishedLabProducts();
   const isSaving = createPriceList.isPending || updatePriceList.isPending;
 
   const {
@@ -110,6 +117,8 @@ export function PriceListFormSheet({ open, onOpenChange, priceList = null, onSav
         description: item.description || undefined,
         amount: item.amount,
         unitsIncluded: item.type === "package" ? item.unitsIncluded : undefined,
+        labProductId: item.labProductId || null,
+        previewImageUrl: item.previewImageUrl || undefined,
       })),
       bulkDiscounts: values.bulkDiscounts,
     };
@@ -167,6 +176,43 @@ export function PriceListFormSheet({ open, onOpenChange, priceList = null, onSav
           <div className="space-y-3">
             {itemsArray.fields.map((field, index) => (
               <div key={field.id} className="space-y-3 rounded-lg border border-border p-4">
+                {/* Lab product link */}
+                {labProducts && labProducts.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`item-${index}-lab`} className="text-xs text-muted-foreground">Link to Lab product (optional)</Label>
+                    <Select
+                      id={`item-${index}-lab`}
+                      value={items[index]?.labProductId ?? ""}
+                      onChange={(e) => {
+                        const labId = e.target.value;
+                        setValue(`items.${index}.labProductId`, labId || undefined);
+                        if (labId) {
+                          const lp = labProducts.find((p) => p.id === labId);
+                          if (lp) {
+                            setValue(`items.${index}.name`, lp.name);
+                            setValue(`items.${index}.amount`, lp.price);
+                            setValue(`items.${index}.previewImageUrl`, lp.previewImageUrl);
+                          }
+                        } else {
+                          setValue(`items.${index}.previewImageUrl`, undefined);
+                        }
+                      }}
+                      containerClassName="w-full"
+                    >
+                      <option value="">— No Lab product —</option>
+                      {labProducts.map((lp) => (
+                        <option key={lp.id} value={lp.id}>
+                          {lp.name} ({lp.dimensions.label} · {lp.currencyCode} {lp.price})
+                        </option>
+                      ))}
+                    </Select>
+                    {items[index]?.previewImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={items[index].previewImageUrl} alt="preview" className="h-16 w-24 rounded object-cover" />
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <div className="flex items-start justify-between gap-3">
                   <div className="grid flex-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">

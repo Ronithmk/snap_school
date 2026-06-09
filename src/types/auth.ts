@@ -27,3 +27,19 @@ export interface LoginCredentials {
 export interface LoginResult {
   session: Session;
 }
+
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+  schoolName: string;
+}
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  password: string;
+}

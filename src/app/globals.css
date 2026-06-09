@@ -128,3 +128,17 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    size: A5 portrait;
+    margin: 8mm;
+  }
+
+  .access-card-page {
+    page-break-after: always;
+    break-after: page;
+    width: 100% !important;
+    border: none !important;
+  }
+}

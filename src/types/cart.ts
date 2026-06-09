@@ -2,7 +2,7 @@ import type { ID } from "./common";
 
 export interface CartLineItem {
   id: ID;
-  photoId: ID;
+  photoId: ID | null;
   priceListItemId: ID;
   /** Snapshot of the item name/price at the time it was added, so totals stay stable. */
   name: string;

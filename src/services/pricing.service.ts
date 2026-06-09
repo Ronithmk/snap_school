@@ -12,21 +12,23 @@ const ENDPOINTS = {
 let mockPriceLists = [...MOCK_PRICE_LISTS];
 
 export const pricingService = {
-  async list(): Promise<PriceList[]> {
-    if (env.useMockApi) return mockDelay(mockPriceLists);
-    const { data } = await apiClient.get<PriceList[]>(ENDPOINTS.list);
+  /** All price lists for a given school. */
+  async listBySchool(schoolId: string): Promise<PriceList[]> {
+    if (env.useMockApi) return mockDelay(mockPriceLists.filter((p) => p.schoolId === schoolId));
+    const { data } = await apiClient.get<PriceList[]>(ENDPOINTS.list, { params: { schoolId } });
     return data;
   },
 
-  async getDefaultForCountry(countryCode: string): Promise<PriceList | null> {
+  /** The default price list for a given school (first one marked isDefault). */
+  async getDefaultForSchool(schoolId: string): Promise<PriceList | null> {
     if (env.useMockApi) {
       return mockDelay(
-        mockPriceLists.find((p) => p.countryCode === countryCode && p.isDefault) ??
-          mockPriceLists.find((p) => p.isDefault) ??
+        mockPriceLists.find((p) => p.schoolId === schoolId && p.isDefault) ??
+          mockPriceLists.find((p) => p.schoolId === schoolId) ??
           null,
       );
     }
-    const { data } = await apiClient.get<PriceList | null>(`${ENDPOINTS.list}/default`, { params: { countryCode } });
+    const { data } = await apiClient.get<PriceList | null>(`${ENDPOINTS.list}/default`, { params: { schoolId } });
     return data;
   },
 
