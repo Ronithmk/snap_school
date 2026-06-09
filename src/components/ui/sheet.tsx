@@ -46,37 +46,48 @@ export function Sheet({ open, onOpenChange, side = "right", title, description, 
 
   return createPortal(
     <div className="fixed inset-0 z-50">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 animate-in fade-in bg-black/40 backdrop-blur-[1px]"
+        className="absolute inset-0 animate-fade-in bg-black/60 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
         aria-hidden
       />
+      {/* Panel */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         data-state={open ? "open" : "closed"}
         className={cn(
-          "animate-in fade-in absolute flex flex-col gap-4 bg-background p-6 shadow-xl duration-200",
+          "absolute flex flex-col gap-0",
+          "glass-navbar border-border",
+          "shadow-[0_8px_40px_oklch(0_0_0/50%)]",
+          side === "left" && "animate-slide-in-left",
+          side === "right" && "animate-slide-in-right",
+          side === "bottom" && "animate-slide-in-up",
           SIDE_CLASSES[side],
           className,
         )}
       >
-        <div className="flex items-start justify-between gap-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
           <div>
-            <h2 className="text-base font-semibold">{title}</h2>
-            {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            {description ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+            ) : null}
           </div>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>,
     document.body,

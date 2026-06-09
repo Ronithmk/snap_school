@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles, Wallet } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SchoolFinder } from "@/components/storefront/school-finder";
@@ -37,9 +36,30 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+    <div className="relative flex flex-1 flex-col overflow-hidden">
+      {/* Decorative background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div
+          className="absolute -top-60 left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full opacity-[0.12] blur-3xl"
+          style={{ background: "radial-gradient(circle, oklch(0.75 0 0) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-0 right-0 h-[500px] w-[500px] translate-x-1/3 translate-y-1/4 rounded-full opacity-[0.07] blur-3xl"
+          style={{ background: "radial-gradient(circle, oklch(0.65 0 0) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage:
+              "linear-gradient(oklch(0.9 0 0) 1px, transparent 1px), linear-gradient(90deg, oklch(0.9 0 0) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
+      </div>
+
+      {/* Navbar */}
+      <header className="glass-navbar sticky top-0 z-30 border-b border-border/60">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -51,67 +71,99 @@ export default async function HomePage() {
       </header>
 
       <main className="flex-1">
-        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        {/* Hero */}
+        <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
           <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              School photo galleries, ordered in minutes.
+            <div className="animate-fade-up">
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-foreground/[0.04] px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+                <Sparkles className="h-3 w-3" />
+                School photo platform
+              </span>
+            </div>
+            <h1 className="animate-fade-up delay-75 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+              <span className="text-gradient">School photo galleries,</span>
+              <br />
+              ordered in minutes.
             </h1>
-            <p className="mt-4 text-balance text-lg text-muted-foreground">
+            <p className="animate-fade-up delay-150 mt-5 text-balance text-lg text-muted-foreground">
               Find your school&rsquo;s gallery, browse class and event albums, and order prints or
               digital downloads — each album has its own cart and checkout.
             </p>
           </div>
 
-          <div className="mx-auto mt-8 max-w-xl">
+          <div className="animate-fade-up delay-225 mx-auto mt-10 max-w-xl">
             <SchoolFinder schools={schools} />
           </div>
         </section>
 
-        <section className="border-y border-border bg-muted/30">
-          <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-12 sm:grid-cols-3 sm:px-6">
-            {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="space-y-2">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-background text-foreground shadow-sm">
+        {/* Features */}
+        <section className="border-y border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:grid-cols-3 sm:px-6">
+            {HIGHLIGHTS.map(({ icon: Icon, title, description }, i) => (
+              <div
+                key={title}
+                className={cn(
+                  "animate-fade-up space-y-3",
+                  i === 0 && "delay-75",
+                  i === 1 && "delay-150",
+                  i === 2 && "delay-225",
+                )}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-foreground shadow-[0_1px_4px_oklch(0_0_0/8%)]">
                   <Icon className="h-5 w-5" />
                 </span>
-                <h2 className="font-medium">{title}</h2>
-                <p className="text-sm text-muted-foreground">{description}</p>
+                <h2 className="text-sm font-semibold">{title}</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">Featured schools</h2>
-              <p className="text-sm text-muted-foreground">Jump straight to a gallery.</p>
+        {/* Featured schools */}
+        {schools.length > 0 && (
+          <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold tracking-tight">Featured schools</h2>
+                <p className="text-sm text-muted-foreground">Jump straight to a gallery.</p>
+              </div>
             </div>
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {schools.map((school) => (
-              <Link key={school.id} href={routes.storefront.school(school.slug)} className="group">
-                <Card className="h-full transition-shadow group-hover:shadow-md">
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {schools.map((school, i) => (
+                <Link
+                  key={school.id}
+                  href={routes.storefront.school(school.slug)}
+                  className={cn(
+                    "glass animate-fade-up group flex items-center gap-4 rounded-2xl border border-border p-4 transition-all duration-200 hover:border-border/80 hover:shadow-[0_4px_20px_oklch(0_0_0/12%)]",
+                    i === 0 && "delay-75",
+                    i === 1 && "delay-150",
+                    i === 2 && "delay-225",
+                  )}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-muted">
+                    {school.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={school.logoUrl} alt="" className="h-full w-full object-cover" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{school.name}</p>
-                      <p className="truncate text-sm text-muted-foreground">{school.albumCount} albums</p>
-                    </div>
-                    <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
+                    ) : (
+                      <span className="text-sm font-semibold uppercase text-muted-foreground">
+                        {school.name.slice(0, 2)}
+                      </span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{school.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{school.albumCount} albums</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-4 text-sm text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
+      <footer className="border-t border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
           <Logo className="text-sm" />
           <p>&copy; {new Date().getFullYear()} SnapSchool. All rights reserved.</p>
         </div>

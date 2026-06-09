@@ -25,7 +25,7 @@ export function DashboardTopbar({ title }: { title?: string }) {
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/60 glass-navbar px-4 sm:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
         <Menu className="h-5 w-5" />
       </Button>

@@ -34,12 +34,12 @@ export function SchoolFinder({ schools }: SchoolFinderProps) {
         />
       </div>
       {matches.length > 0 && (
-        <ul className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+        <ul className="glass absolute z-10 mt-2 w-full overflow-hidden rounded-2xl border border-border shadow-[0_8px_30px_oklch(0_0_0/15%)]">
           {matches.map((school) => (
             <li key={school.id}>
               <Link
                 href={routes.storefront.school(school.slug)}
-                className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
+                className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-foreground/[0.04]"
               >
                 <span className="font-medium">{school.name}</span>
                 <span className="text-muted-foreground">/{school.slug}</span>

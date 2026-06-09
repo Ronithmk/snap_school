@@ -35,7 +35,10 @@ export function TabsList({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       role="tablist"
-      className={cn("inline-flex h-10 items-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground", className)}
+      className={cn(
+        "inline-flex h-10 items-center gap-0.5 rounded-xl border border-border bg-muted/60 p-1 text-muted-foreground backdrop-blur-sm",
+        className,
+      )}
       {...props}
     />
   );
@@ -55,8 +58,10 @@ export function TabsTrigger({ value, className, ...props }: TabsTriggerProps) {
       aria-selected={isActive}
       onClick={() => setValue(value)}
       className={cn(
-        "inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isActive ? "bg-background text-foreground shadow-sm" : "hover:text-foreground",
+        "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none",
+        isActive
+          ? "bg-background text-foreground shadow-[0_1px_4px_oklch(0_0_0/12%)]"
+          : "hover:text-foreground hover:bg-accent/60",
         className,
       )}
       {...props}

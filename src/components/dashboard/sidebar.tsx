@@ -85,11 +85,11 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-        indent && "ml-4 text-xs",
+        "flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-150",
+        indent && "ml-3 text-xs",
         isActive
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+          ? "bg-foreground text-background shadow-[0_1px_4px_oklch(0_0_0/20%)]"
+          : "text-muted-foreground hover:bg-foreground/6 hover:text-foreground",
       )}
     >
       <Icon className={cn("shrink-0", indent ? "h-3.5 w-3.5" : "h-4 w-4")} />
@@ -116,9 +116,9 @@ function SectionHeader({
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-        "text-muted-foreground hover:bg-accent hover:text-foreground",
-        indent && "ml-4 text-xs",
+        "flex w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-150",
+        "text-muted-foreground hover:bg-foreground/6 hover:text-foreground",
+        indent && "ml-3 text-xs",
       )}
     >
       <Icon className={cn("shrink-0", indent ? "h-3.5 w-3.5" : "h-4 w-4")} />
@@ -173,10 +173,10 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
       <Link
         href={routes.dashboard.schools()}
         onClick={onNavigate}
-        className="mb-2 flex items-center gap-2 rounded-lg border border-primary/40 px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+        className="mb-2 flex items-center gap-2 rounded-xl border border-border/60 bg-foreground/[0.03] px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-foreground/6 hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4 shrink-0" />
-        Schools
+        All Schools
       </Link>
 
       {/* Dashboard */}
@@ -222,7 +222,7 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
       <NavLink href={r.schoolPrintQueue(schoolId)} label="Print Queue" icon={Printer} onNavigate={onNavigate} />
 
       {/* Divider */}
-      <div className="my-1 h-px bg-border" />
+      <div className="my-1.5 h-px bg-border/50" />
 
       {/* Reports (collapsible) */}
       <SectionHeader
@@ -261,7 +261,7 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
       <NavLink href={r.schoolInvoices(schoolId)} label="Invoices" icon={Receipt} onNavigate={onNavigate} />
 
       {/* Divider */}
-      <div className="my-1 h-px bg-border" />
+      <div className="my-1.5 h-px bg-border/50" />
 
       {/* School Settings (collapsible) */}
       <SectionHeader label="School Settings" icon={Settings} open={settingsOpen} onToggle={() => setSettingsOpen((v) => !v)} />
@@ -304,7 +304,7 @@ export function DashboardNav({ className, onNavigate }: SidebarProps) {
   const items = NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
   return (
-    <nav className={cn("flex flex-col gap-1", className)}>
+    <nav className={cn("flex flex-col gap-0.5", className)}>
       {items.map(({ href, label, icon: Icon }) => {
         const isActive = href === routes.dashboard.root() ? pathname === href : pathname.startsWith(href);
         return (
@@ -313,11 +313,13 @@ export function DashboardNav({ className, onNavigate }: SidebarProps) {
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150",
+              isActive
+                ? "bg-foreground text-background shadow-[0_1px_4px_oklch(0_0_0/20%)]"
+                : "text-muted-foreground hover:bg-foreground/6 hover:text-foreground",
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4 w-4 shrink-0" />
             {label}
           </Link>
         );
@@ -328,11 +330,11 @@ export function DashboardNav({ className, onNavigate }: SidebarProps) {
 
 export function DashboardSidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar p-4 lg:flex">
-      <div className="px-2 py-2">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border/60 glass-navbar p-5 lg:flex">
+      <div className="px-1 py-1">
         <Logo />
       </div>
-      <div className="mt-6 overflow-y-auto flex-1">
+      <div className="mt-6 flex-1 overflow-y-auto">
         <DashboardNav />
       </div>
     </aside>

@@ -124,7 +124,7 @@ export function LoginForm() {
         </Link>
       </p>
 
-      <div className="rounded-lg border border-dashed border-border p-3">
+      <div className="rounded-xl border border-dashed border-border/60 bg-foreground/[0.02] p-3">
         <p className="mb-2 text-xs font-medium text-muted-foreground">Try a demo account</p>
         <div className="flex flex-wrap gap-2">
           {DEMO_ACCOUNTS.map((account) => (
@@ -133,7 +133,7 @@ export function LoginForm() {
               type="button"
               onClick={() => loginAsDemo(account)}
               disabled={login.isPending}
-              className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-50"
+              className="rounded-lg border border-border/60 bg-foreground/[0.03] px-2.5 py-1 text-xs font-medium transition-colors hover:bg-foreground/8 disabled:opacity-50"
             >
               {account.label}
             </button>

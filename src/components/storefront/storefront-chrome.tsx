@@ -61,10 +61,10 @@ export function StorefrontHeader({ school }: TenantHeaderProps) {
       )}
 
       <header
-        className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        className="sticky top-0 z-30 border-b border-border/60 glass-navbar"
         style={borderStyle}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link href={routes.storefront.school(school.slug)} className="flex min-w-0 items-center gap-2.5">
             {school.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -107,8 +107,8 @@ export function StorefrontFooter({ school }: TenantHeaderProps) {
   const hasSocial = settings?.whatsappNumber || settings?.instagramUrl || settings?.facebookUrl;
 
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <footer className="border-t border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">{footerText}</p>
 

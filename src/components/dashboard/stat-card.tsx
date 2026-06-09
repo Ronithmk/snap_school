@@ -21,14 +21,14 @@ export function StatCard({ label, value, icon: Icon, changePercent }: StatCardPr
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-2xl font-semibold tracking-tight">{value}</p>
           {changePercent !== undefined && (
-            <p className={cn("inline-flex items-center gap-0.5 text-xs font-medium", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+            <p className={cn("inline-flex items-center gap-0.5 text-xs font-medium", isPositive ? "text-foreground" : "text-destructive")}>
               <TrendIcon className="h-3.5 w-3.5" />
               {Math.abs(changePercent).toFixed(1)}% vs last period
             </p>
           )}
         </div>
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Icon className="h-5 w-5" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-muted-foreground">
+          <Icon className="h-4.5 w-4.5" />
         </span>
       </CardContent>
     </Card>
