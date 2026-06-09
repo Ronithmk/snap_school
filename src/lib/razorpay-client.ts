@@ -1,15 +1,23 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID ?? "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET ?? "",
-});
+let _rzp: Razorpay | null = null;
+
+export function getRazorpay(): Razorpay | null {
+  if (!process.env.RAZORPAY_KEY_ID) return null;
+  if (!_rzp) {
+    _rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET ?? "",
+    });
+  }
+  return _rzp;
+}
 
 export function verifyRazorpaySignature(
   razorpayOrderId: string,
   razorpayPaymentId: string,
-  signature: string
+  signature: string,
 ): boolean {
   const body = `${razorpayOrderId}|${razorpayPaymentId}`;
   const expected = crypto

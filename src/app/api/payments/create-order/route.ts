@@ -2,12 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
-import Razorpay from "razorpay";
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID ?? "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET ?? "",
-});
+import { getRazorpay } from "@/lib/razorpay-client";
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthUser(req);
@@ -34,16 +29,17 @@ export async function POST(req: NextRequest) {
       customerName,
       customerEmail,
       status: "pending_payment",
-      items,
-      totals,
-      shippingAddress: shippingAddress ?? null,
+      items: typeof items === "string" ? items : JSON.stringify(items),
+      totals: typeof totals === "string" ? totals : JSON.stringify(totals),
+      shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : null,
       countryCode: countryCode ?? "IN",
     },
   });
 
   let razorpayOrderId: string | null = null;
-  if (process.env.RAZORPAY_KEY_ID) {
-    const rzpOrder = await razorpay.orders.create({
+  const rzp = getRazorpay();
+  if (rzp) {
+    const rzpOrder = await rzp.orders.create({
       amount: amountPaise,
       currency: "INR",
       receipt: orderNumber,

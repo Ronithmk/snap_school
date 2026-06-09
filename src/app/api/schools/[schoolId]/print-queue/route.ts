@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
   // Collect all photoIds to batch-fetch
   const allPhotoIds = new Set<string>();
   for (const order of orders) {
-    const items = order.items as any[];
+    const items: any[] = typeof order.items === "string" ? JSON.parse(order.items) : (order.items as any[]);
     for (const item of items) {
       if (item.photoId) allPhotoIds.add(item.photoId);
     }
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
   const jobs: PrintJob[] = [];
 
   for (const order of orders) {
-    const items = order.items as any[];
+    const items: any[] = typeof order.items === "string" ? JSON.parse(order.items) : (order.items as any[]);
     items.forEach((item: any, idx: number) => {
       const size = extractPrintSize(item.name ?? "");
       const photo = item.photoId ? photoMap.get(item.photoId) : null;

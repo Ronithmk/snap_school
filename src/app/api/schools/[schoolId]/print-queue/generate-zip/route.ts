@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
   // Collect photoIds
   const allPhotoIds = new Set<string>();
   for (const order of orders) {
-    const items = order.items as any[];
+    const items: any[] = typeof order.items === "string" ? JSON.parse(order.items) : (order.items as any[]);
     for (const item of items) {
       if (item.photoId) allPhotoIds.add(item.photoId);
     }
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
   let filesAdded = 0;
 
   for (const order of orders) {
-    const items = order.items as any[];
+    const items: any[] = typeof order.items === "string" ? JSON.parse(order.items) : (order.items as any[]);
     for (const item of items) {
       const size = extractPrintSize(item.name ?? "");
       if (sizeGroup && size !== sizeGroup) continue;
