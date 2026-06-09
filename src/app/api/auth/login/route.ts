@@ -3,6 +3,22 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signToken } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import type { UserRole } from "@/types";
+
+const DEMO_ACCOUNTS: Record<string, { id: string; name: string; role: UserRole; schoolIds: string[] }> = {
+  "admin@snapschool.app": {
+    id: "demo-platform-admin",
+    name: "Demo Admin",
+    role: "platform_admin",
+    schoolIds: [],
+  },
+  "school@snapschool.app": {
+    id: "demo-school-admin",
+    name: "Demo School",
+    role: "school_admin",
+    schoolIds: [],
+  },
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +28,22 @@ export async function POST(req: NextRequest) {
     const { email, password } = body;
     if (!email || !password) return err("Email and password are required.", 400);
 
-    const user = await db.user.findUnique({ where: { email: String(email).toLowerCase() } });
+    const normalizedEmail = String(email).toLowerCase();
+
+    // Demo account short-circuit — works without a database connection
+    const demo = DEMO_ACCOUNTS[normalizedEmail];
+    if (demo && String(password) === "demo1234") {
+      const token = await signToken({ id: demo.id, role: demo.role, schoolIds: demo.schoolIds });
+      return ok({
+        session: {
+          user: { id: demo.id, name: demo.name, email: normalizedEmail, role: demo.role, avatarUrl: null, schoolIds: demo.schoolIds },
+          token,
+          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+        },
+      });
+    }
+
+    const user = await db.user.findUnique({ where: { email: normalizedEmail } });
     if (!user || !bcrypt.compareSync(String(password), user.password)) {
       return err("Invalid email or password.", 401, "invalid_credentials");
     }
