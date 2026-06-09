@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 import { Logo } from "@/components/shared/logo";
+import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -19,7 +21,9 @@ export default function LoginPage() {
             Platform admins and school admins use the same form — access is role-based.
           </p>
         </div>
-        <LoginForm />
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

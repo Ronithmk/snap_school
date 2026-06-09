@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { Logo } from "@/components/shared/logo";
+import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 
 export const metadata: Metadata = { title: "Set new password" };
@@ -19,7 +21,9 @@ export default function ResetPasswordPage() {
             Choose a strong password for your account.
           </p>
         </div>
-        <ResetPasswordForm />
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+          <ResetPasswordForm />
+        </Suspense>
         <p className="text-center text-sm text-muted-foreground">
           <Link href={routes.login()} className="font-medium text-foreground underline-offset-2 hover:underline">
             Back to sign in
