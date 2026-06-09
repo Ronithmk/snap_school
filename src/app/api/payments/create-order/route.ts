@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       status: "pending_payment",
       items: typeof items === "string" ? items : JSON.stringify(items),
       totals: typeof totals === "string" ? totals : JSON.stringify(totals),
-      shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : null,
+      shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : undefined,
       countryCode: countryCode ?? "IN",
     },
   });
