@@ -8,19 +8,24 @@ import {
   Banknote,
   BarChart3,
   BookMarked,
+  Bot,
   CheckCircle,
   ChevronDown,
   ChevronRight,
   ClipboardList,
   Clock,
+  Globe,
   GraduationCap,
   IdCard,
   Images,
   LayoutDashboard,
   LayoutGrid,
   List,
+  Megaphone,
   Package,
+  Palette,
   PieChart,
+  Plug,
   Receipt,
   Settings,
   ShoppingBag,
@@ -30,6 +35,7 @@ import {
   UserPlus,
   Users,
   Wand2,
+  Zap,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { useSession } from "@/hooks/use-auth";
@@ -137,17 +143,26 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
 
   const onReports = pathname.includes(`/schools/${schoolId}/reports`);
   const onSalesOverview = pathname.includes(`/schools/${schoolId}/reports/sales-overview`);
+  const onSettings = [
+    routes.dashboard.schoolBranding(schoolId),
+    routes.dashboard.schoolContent(schoolId),
+    routes.dashboard.schoolPricingRules(schoolId),
+    routes.dashboard.schoolIntegrations(schoolId),
+    routes.dashboard.schoolAiTools(schoolId),
+  ].some((r) => pathname.startsWith(r));
 
   const [classesOpen, setClassesOpen] = useState(onClasses);
   const [reportsOpen, setReportsOpen] = useState(onReports);
   const [salesOverviewOpen, setSalesOverviewOpen] = useState(onSalesOverview);
+  const [settingsOpen, setSettingsOpen] = useState(onSettings);
 
   // Auto-expand when navigating to a child route externally
   useEffect(() => {
     if (onClasses) setClassesOpen(true);
     if (onReports) setReportsOpen(true);
     if (onSalesOverview) setSalesOverviewOpen(true);
-  }, [onClasses, onReports, onSalesOverview]);
+    if (onSettings) setSettingsOpen(true);
+  }, [onClasses, onReports, onSalesOverview, onSettings]);
 
   const r = routes.dashboard;
 
@@ -240,6 +255,21 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
 
       {/* Invoices */}
       <NavLink href={r.schoolInvoices(schoolId)} label="Invoices" icon={Receipt} onNavigate={onNavigate} />
+
+      {/* Divider */}
+      <div className="my-1 h-px bg-border" />
+
+      {/* School Settings (collapsible) */}
+      <SectionHeader label="School Settings" icon={Settings} open={settingsOpen} onToggle={() => setSettingsOpen((v) => !v)} />
+      {settingsOpen && (
+        <div className="flex flex-col gap-0.5">
+          <NavLink href={r.schoolBranding(schoolId)} label="Branding" icon={Palette} indent onNavigate={onNavigate} />
+          <NavLink href={r.schoolContent(schoolId)} label="Content / CMS" icon={Megaphone} indent onNavigate={onNavigate} />
+          <NavLink href={r.schoolPricingRules(schoolId)} label="Pricing Rules" icon={Zap} indent onNavigate={onNavigate} />
+          <NavLink href={r.schoolIntegrations(schoolId)} label="Integrations" icon={Plug} indent onNavigate={onNavigate} />
+          <NavLink href={r.schoolAiTools(schoolId)} label="AI & Automation" icon={Bot} indent onNavigate={onNavigate} />
+        </div>
+      )}
     </nav>
   );
 }

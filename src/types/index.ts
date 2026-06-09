@@ -8,3 +8,4 @@ export * from "./order";
 export * from "./analytics";
 export * from "./lab";
 export * from "./student";
+export * from "./content";

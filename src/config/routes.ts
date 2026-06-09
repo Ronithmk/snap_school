@@ -38,6 +38,12 @@ export const routes = {
     schoolReportCashSummary: (id: string) => `/dashboard/schools/${id}/reports/cash-summary`,
     schoolInvoices: (id: string) => `/dashboard/schools/${id}/invoices`,
     schoolApprovals: (id: string) => `/dashboard/schools/${id}/approvals`,
+    // ── School settings ────────────────────────────────────────────
+    schoolBranding: (id: string) => `/dashboard/schools/${id}/branding`,
+    schoolContent: (id: string) => `/dashboard/schools/${id}/content`,
+    schoolPricingRules: (id: string) => `/dashboard/schools/${id}/pricing-rules`,
+    schoolIntegrations: (id: string) => `/dashboard/schools/${id}/integrations`,
+    schoolAiTools: (id: string) => `/dashboard/schools/${id}/ai-tools`,
     // ───────────────────────────────────────────────────────────────
     lab: () => "/dashboard/lab",
     labProducts: () => "/dashboard/lab/products",

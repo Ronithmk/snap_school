@@ -27,7 +27,21 @@ export interface SchoolSettings {
   currencyCode: string;
   tax: TaxSettings;
   supportEmail?: string;
+  // ── White-label branding ──────────────────────────────────────
   primaryColor?: string;
+  /** Custom footer tagline shown on the storefront. */
+  footerText?: string;
+  /** Whether to show "Powered by SnapSchool" in the footer. */
+  showPoweredBy?: boolean;
+  /** Custom domain the school wants (display only — DNS must be configured externally). */
+  customDomain?: string;
+  // ── Social / contact ─────────────────────────────────────────
+  whatsappNumber?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  // ── Language ─────────────────────────────────────────────────
+  /** Default storefront locale for parents visiting this school's portal. */
+  defaultLocale?: string;
 }
 
 export type SchoolStatus = "active" | "inactive" | "archived";
@@ -52,6 +66,7 @@ export interface CreateSchoolInput {
   name: string;
   slug: string;
   logoUrl?: string;
+  bannerUrl?: string;
   description?: string;
   settings: SchoolSettings;
 }
