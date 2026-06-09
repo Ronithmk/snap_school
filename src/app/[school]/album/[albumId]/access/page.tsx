@@ -44,7 +44,7 @@ export default function AlbumAccessPage({ params }: AlbumAccessPageProps) {
           router.replace(routes.storefront.album(schoolSlug, albumId));
         },
         onError: (err) => {
-          setError((err as ApiError).message ?? "Incorrect password. Please try again.");
+          setError((err as unknown as ApiError).message ?? "Incorrect password. Please try again.");
         },
       },
     );

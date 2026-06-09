@@ -82,7 +82,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
           clearCart();
           toast.success("Order placed! A confirmation has been sent to your email.");
         },
-        onError: (err) => toast.error((err as ApiError).message ?? "Couldn't place your order. Please try again."),
+        onError: (err) => toast.error((err as unknown as ApiError).message ?? "Couldn't place your order. Please try again."),
       },
     );
   }

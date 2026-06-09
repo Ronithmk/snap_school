@@ -69,8 +69,10 @@ export default function DashboardAnalyticsPage() {
                   />
                   <YAxis tickLine={false} axisLine={false} width={64} tickFormatter={(value: number) => formatCurrency(value, currencyCode)} className="text-xs fill-muted-foreground" />
                   <Tooltip
-                    formatter={(value: number, name: string) => [name === "revenue" ? formatCurrency(value, currencyCode) : value, name === "revenue" ? "Revenue" : "Orders"]}
-                    labelFormatter={(value: string) => new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={(value: any, name: any) => [name === "revenue" ? formatCurrency(value, currencyCode) : value, name === "revenue" ? "Revenue" : "Orders"] as any}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    labelFormatter={(value: any) => new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                     contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-popover)", color: "var(--color-popover-foreground)" }}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} fill="url(#revenueFill)" />
