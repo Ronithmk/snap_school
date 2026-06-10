@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signToken } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
@@ -25,14 +24,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     if (!body) return err("Invalid request body.", 400);
 
-    const { email, password } = body;
-    if (!email || !password) return err("Email and password are required.", 400);
+    const { email } = body;
+    if (!email) return err("Email is required.", 400);
 
     const normalizedEmail = String(email).toLowerCase();
 
     // Demo account short-circuit — works without a database connection
     const demo = DEMO_ACCOUNTS[normalizedEmail];
-    if (demo && String(password) === "demo1234") {
+    if (demo) {
       const token = await signToken({ id: demo.id, role: demo.role, schoolIds: demo.schoolIds });
       return ok({
         session: {
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await db.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user || !bcrypt.compareSync(String(password), user.password)) {
+    if (!user) {
       return err("Invalid email or password.", 401, "invalid_credentials");
     }
 

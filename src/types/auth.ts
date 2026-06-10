@@ -21,7 +21,7 @@ export interface Session {
 
 export interface LoginCredentials {
   email: string;
-  password: string;
+  password?: string;
 }
 
 export interface LoginResult {
@@ -31,7 +31,7 @@ export interface LoginResult {
 export interface RegisterInput {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   schoolName: string;
 }
 

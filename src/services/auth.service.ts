@@ -30,9 +30,8 @@ function buildSession(userId: string): Session {
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResult> {
     if (env.useMockApi) {
-      const match = MOCK_USERS.find(
-        (u) => u.email.toLowerCase() === credentials.email.toLowerCase() && u.password === credentials.password,
-      );
+      const allUsers = [...MOCK_USERS, ...mockRegisteredUsers];
+      const match = allUsers.find((u) => u.email.toLowerCase() === credentials.email.toLowerCase());
       if (!match) return mockReject("Invalid email or password.", 401, "invalid_credentials");
       return mockDelay({ session: buildSession(match.id) });
     }
@@ -63,7 +62,7 @@ export const authService = {
         id: `usr_${Date.now()}`,
         name: input.name,
         email: input.email,
-        password: input.password,
+        password: input.password ?? "",
         role: "school_admin" as const,
         avatarUrl: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(input.name)}`,
       };
