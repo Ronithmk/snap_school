@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push:prod": "prisma db push --schema=prisma/schema.prod.prisma"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1064.0",
