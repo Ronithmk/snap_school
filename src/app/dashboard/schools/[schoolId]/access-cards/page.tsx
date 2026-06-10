@@ -184,8 +184,8 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
   const activeAlbum = albums?.data.find((a) => a.id === selectedAlbumId) ?? albums?.data[0];
 
   function buildCartUrl(student: Student) {
-    if (!activeAlbum || !school) return origin;
-    return `${origin}${routes.storefront.cart(school.slug, activeAlbum.id)}?student=${student.id}`;
+    if (!school) return origin;
+    return `${origin}${routes.storefront.parent(school.slug, student.id)}`;
   }
 
   function buildGalleryUrl() {

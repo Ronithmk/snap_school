@@ -21,10 +21,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const DEMO_ACCOUNTS = [
-  { label: "Platform Admin", email: "admin@snapschool.app" },
-  { label: "School Admin", email: "school@snapschool.app" },
-];
+const DEMO_ACCOUNTS = [{ label: "School Admin", email: "school@snapschool.app" }];
 
 export function LoginForm() {
   const { t } = useTranslation();

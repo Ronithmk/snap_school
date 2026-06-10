@@ -115,6 +115,7 @@ model Photo {
   fileName             String
   isFavorite           Boolean              @default(false)
   faceValidationStatus String               @default("pending")
+  category             String?
   createdAt            DateTime             @default(now())
   album                Album                @relation(fields: [albumId], references: [id], onDelete: Cascade)
   tags                 PhotoTagAssignment[]
@@ -156,6 +157,7 @@ model PriceListItem {
   description     String?
   previewImageUrl String?
   unitsIncluded   Int?
+  category        String?
   priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
 }
 

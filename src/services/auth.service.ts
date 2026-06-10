@@ -2,15 +2,18 @@ import { apiClient } from "@/lib/api-client";
 import { env } from "@/config/env";
 import { mockDelay, mockReject } from "@/services/mock/transport";
 import { MOCK_USERS } from "@/services/mock/seed-data";
-import type { ForgotPasswordInput, LoginCredentials, LoginResult, RegisterInput, ResetPasswordInput, Session } from "@/types";
+import type { ForgotPasswordInput, LoginCredentials, LoginResult, PlatformLoginCredentials, RegisterInput, ResetPasswordInput, Session } from "@/types";
 
 const ENDPOINTS = {
   login: "/auth/login",
+  adminLogin: "/auth/admin-login",
   session: "/auth/session",
   register: "/auth/register",
   forgotPassword: "/auth/forgot-password",
   resetPassword: "/auth/reset-password",
 } as const;
+
+const MOCK_PLATFORM_ADMIN = { username: "platformadmin", password: "Snap@Admin2026" };
 
 /** In-memory mock store for registered users and pending reset tokens. */
 const mockRegisteredUsers: (typeof MOCK_USERS[number])[] = [];
@@ -36,6 +39,29 @@ export const authService = {
       return mockDelay({ session: buildSession(match.id) });
     }
     const { data } = await apiClient.post<LoginResult>(ENDPOINTS.login, credentials);
+    return data;
+  },
+
+  async platformLogin(credentials: PlatformLoginCredentials): Promise<LoginResult> {
+    if (env.useMockApi) {
+      if (credentials.username !== MOCK_PLATFORM_ADMIN.username || credentials.password !== MOCK_PLATFORM_ADMIN.password) {
+        return mockReject("Invalid username or password.", 401, "invalid_credentials");
+      }
+      return mockDelay({
+        session: {
+          user: {
+            id: "platform-admin",
+            name: "Platform Admin",
+            email: "platform-admin@snapschool.app",
+            role: "platform_admin",
+            schoolIds: [],
+          },
+          token: `mock-token.platform-admin.${Date.now()}`,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 8).toISOString(),
+        },
+      });
+    }
+    const { data } = await apiClient.post<LoginResult>(ENDPOINTS.adminLogin, credentials);
     return data;
   },
 

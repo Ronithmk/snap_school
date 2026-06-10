@@ -117,3 +117,18 @@ export const LAB_ELEMENT_TYPE_LABELS: Record<LabElementType, string> = {
   text: "Text",
   shape: "Shape",
 };
+
+/**
+ * Preset photo/product categories used to link a photo to the price-list items
+ * that should be offered for it on the parent storefront (e.g. QR-code landing page).
+ * An empty value means "uncategorized" — uncategorized photos show all items, and
+ * uncategorized items are offered alongside every photo.
+ */
+export const PHOTO_CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Uncategorized" },
+  { value: "pose1", label: "Individual — Pose 1" },
+  { value: "pose2", label: "Individual — Pose 2" },
+  { value: "bw", label: "Individual — Black & White" },
+  { value: "group", label: "Group Photo" },
+  { value: "collage", label: "Collage" },
+];

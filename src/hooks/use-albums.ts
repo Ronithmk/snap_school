@@ -118,6 +118,15 @@ export function useDeleteAlbum(schoolId: string | undefined) {
   });
 }
 
+/** A single photo by id — used by the per-photo storefront page. */
+export function usePhoto(photoId: string | undefined) {
+  return useQuery({
+    queryKey: ["photo", photoId],
+    queryFn: () => albumsService.getPhoto(photoId!),
+    enabled: !!photoId,
+  });
+}
+
 /** Powers infinite-scroll photo grids inside an album gallery. */
 export function useAlbumPhotos(albumId: string | undefined, search?: string) {
   return useInfiniteQuery({
@@ -147,6 +156,17 @@ export function useFlaggedPhotos(schoolId: string | undefined) {
     queryKey: ["flagged-photos", schoolId],
     queryFn: () => albumsService.getFlaggedPhotos(schoolId!),
     enabled: !!schoolId,
+  });
+}
+
+export function useUpdatePhotoCategory(albumId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ photoId, category }: { photoId: string; category: string | null }) =>
+      albumsService.updatePhotoCategory(photoId, category),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["album-photos", albumId] });
+    },
   });
 }
 

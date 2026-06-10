@@ -24,6 +24,12 @@ export interface LoginCredentials {
   password?: string;
 }
 
+/** Separate credential shape for the platform-admin-only sign-in. */
+export interface PlatformLoginCredentials {
+  username: string;
+  password: string;
+}
+
 export interface LoginResult {
   session: Session;
 }

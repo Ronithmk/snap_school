@@ -40,6 +40,15 @@ export function useDeleteStudent(schoolId: string) {
   });
 }
 
+/** Public: a student's album, photos, and resolved price list — for the parent QR landing page. */
+export function useStudentAlbum(studentId: string | undefined) {
+  return useQuery({
+    queryKey: ["student-album", studentId],
+    queryFn: () => studentsService.getAlbum(studentId!),
+    enabled: !!studentId,
+  });
+}
+
 export function useRegenerateCredentials(schoolId: string) {
   const queryClient = useQueryClient();
   return useMutation({

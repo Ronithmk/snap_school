@@ -4,6 +4,7 @@
 export const routes = {
   home: () => "/",
   login: () => "/auth/login",
+  adminLogin: () => "/auth/admin-login",
   register: () => "/auth/register",
   forgotPassword: () => "/auth/forgot-password",
   resetPassword: (token?: string) => token ? `/auth/reset-password?token=${token}` : "/auth/reset-password",
@@ -61,5 +62,8 @@ export const routes = {
     cart: (schoolSlug: string, albumId: string) => `/${schoolSlug}/album/${albumId}/cart`,
     checkout: (schoolSlug: string, albumId: string) =>
       `/${schoolSlug}/album/${albumId}/checkout`,
+    parent: (schoolSlug: string, studentId: string) => `/${schoolSlug}/parents/${studentId}`,
+    albumPhoto: (schoolSlug: string, albumId: string, photoId: string) =>
+      `/${schoolSlug}/album/${albumId}/photo/${photoId}`,
   },
 } as const;

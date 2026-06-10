@@ -15,6 +15,8 @@ export interface PriceListItem {
   labProductId?: ID | null;
   /** Mockup/preview image shown in the storefront product picker and cart. */
   previewImageUrl?: string;
+  /** Restricts this item to photos tagged with the same category. Null/empty = available for all photos. */
+  category?: string | null;
 }
 
 export interface BulkDiscountTier {

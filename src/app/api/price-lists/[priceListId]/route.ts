@@ -13,6 +13,7 @@ function fmtItem(item: any) {
     description: item.description ?? null,
     previewImageUrl: item.previewImageUrl ?? null,
     unitsIncluded: item.unitsIncluded ?? null,
+    category: item.category ?? null,
   };
 }
 
@@ -29,10 +30,7 @@ function fmtPriceList(pl: any) {
   };
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ priceListId: string }> }) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ priceListId: string }> }) {
   const { priceListId } = await params;
 
   const priceList = await db.priceList.findUnique({
@@ -68,6 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
         description: item.description ?? null,
         previewImageUrl: item.previewImageUrl ?? null,
         unitsIncluded: item.unitsIncluded ?? null,
+        category: item.category ?? null,
       })),
     };
   }

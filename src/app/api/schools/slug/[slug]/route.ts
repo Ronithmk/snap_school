@@ -1,12 +1,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const school = await db.school.findUnique({ where: { slug } });

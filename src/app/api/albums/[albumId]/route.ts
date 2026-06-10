@@ -26,10 +26,7 @@ function fmtAlbum(a: any) {
   };
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ albumId: string }> }) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = await params;
 
   const album = await db.album.findUnique({ where: { id: albumId } });

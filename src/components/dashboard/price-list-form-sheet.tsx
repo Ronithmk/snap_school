@@ -13,6 +13,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { useCreatePriceList, useUpdatePriceList } from "@/hooks/use-pricing";
 import { usePublishedLabProducts } from "@/hooks/use-lab";
 import { COUNTRIES, getCurrency } from "@/config/currency";
+import { PHOTO_CATEGORY_OPTIONS } from "@/config/constants";
 import type { ApiError, PriceItemType, PriceList } from "@/types";
 
 const PRICE_ITEM_TYPE_LABELS: Record<PriceItemType, string> = {
@@ -30,6 +31,7 @@ const itemSchema = z.object({
   unitsIncluded: z.coerce.number().optional(),
   labProductId: z.string().optional(),
   previewImageUrl: z.string().optional(),
+  category: z.string().optional(),
 });
 
 const tierSchema = z.object({
@@ -51,7 +53,7 @@ function defaultsFor(priceList: PriceList | null): FormValues {
     return {
       name: "",
       countryCode: "US",
-      items: [{ type: "digital_download", name: "Digital Download (HD)", description: "", amount: 8, unitsIncluded: undefined, labProductId: undefined, previewImageUrl: undefined }],
+      items: [{ type: "digital_download", name: "Digital Download (HD)", description: "", amount: 8, unitsIncluded: undefined, labProductId: undefined, previewImageUrl: undefined, category: "" }],
       bulkDiscounts: [],
     };
   }
@@ -66,6 +68,7 @@ function defaultsFor(priceList: PriceList | null): FormValues {
       unitsIncluded: item.unitsIncluded,
       labProductId: item.labProductId ?? undefined,
       previewImageUrl: item.previewImageUrl ?? undefined,
+      category: item.category ?? "",
     })),
     bulkDiscounts: priceList.bulkDiscounts.map((tier) => ({ minQuantity: tier.minQuantity, discountPercent: tier.discountPercent })),
   };
@@ -119,6 +122,7 @@ export function PriceListFormSheet({ open, onOpenChange, schoolId, priceList = n
         unitsIncluded: item.type === "package" ? item.unitsIncluded : undefined,
         labProductId: item.labProductId || null,
         previewImageUrl: item.previewImageUrl || undefined,
+        category: item.category || null,
       })),
       bulkDiscounts: values.bulkDiscounts,
     };
@@ -165,7 +169,7 @@ export function PriceListFormSheet({ open, onOpenChange, schoolId, priceList = n
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => itemsArray.append({ type: "digital_download", name: "", description: "", amount: 0, unitsIncluded: undefined })}
+              onClick={() => itemsArray.append({ type: "digital_download", name: "", description: "", amount: 0, unitsIncluded: undefined, category: "" })}
             >
               <Plus className="h-4 w-4" />
               Add item
@@ -265,6 +269,24 @@ export function PriceListFormSheet({ open, onOpenChange, schoolId, priceList = n
                       <Input id={`item-${index}-units`} type="number" min="1" {...register(`items.${index}.unitsIncluded`)} />
                     </div>
                   ) : null}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor={`item-${index}-category`}>Photo category</Label>
+                  <Select
+                    id={`item-${index}-category`}
+                    value={items[index]?.category ?? ""}
+                    onChange={(e) => setValue(`items.${index}.category`, e.target.value)}
+                  >
+                    {PHOTO_CATEGORY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.value === "" ? "All photos (uncategorized)" : opt.label}
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Restrict this product to photos tagged with this category on the parent storefront.
+                  </p>
                 </div>
               </div>
             ))}

@@ -5,12 +5,6 @@ import { ok, err } from "@/lib/api-helpers";
 import type { UserRole } from "@/types";
 
 const DEMO_ACCOUNTS: Record<string, { id: string; name: string; role: UserRole; schoolIds: string[] }> = {
-  "admin@snapschool.app": {
-    id: "demo-platform-admin",
-    name: "Demo Admin",
-    role: "platform_admin",
-    schoolIds: [],
-  },
   "school@snapschool.app": {
     id: "demo-school-admin",
     name: "Demo School",

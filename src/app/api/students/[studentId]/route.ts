@@ -17,10 +17,7 @@ function fmtStudent(s: any) {
   };
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
   const { studentId } = await params;
 
   const student = await db.student.findUnique({ where: { id: studentId } });

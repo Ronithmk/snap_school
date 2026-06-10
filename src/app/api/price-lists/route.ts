@@ -13,6 +13,7 @@ function fmtItem(item: any) {
     description: item.description ?? null,
     previewImageUrl: item.previewImageUrl ?? null,
     unitsIncluded: item.unitsIncluded ?? null,
+    category: item.category ?? null,
   };
 }
 
@@ -30,9 +31,6 @@ function fmtPriceList(pl: any) {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
   const { searchParams } = new URL(req.url);
   const schoolId = searchParams.get("schoolId");
 
@@ -72,6 +70,7 @@ export async function POST(req: NextRequest) {
               description: item.description ?? null,
               previewImageUrl: item.previewImageUrl ?? null,
               unitsIncluded: item.unitsIncluded ?? null,
+              category: item.category ?? null,
             })),
           }
         : undefined,

@@ -11,9 +11,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlbumFormSheet, PhotoUploadDropzone } from "@/components/dashboard";
+import { Select } from "@/components/ui/select";
 import { useSchool } from "@/hooks/use-tenant";
-import { useAlbum, useAlbumPhotos, useDeleteAlbum, useSchoolClasses } from "@/hooks/use-albums";
-import { ALBUM_VISIBILITY_LABELS, ALBUM_VISIBILITY_TONE } from "@/config/constants";
+import { useAlbum, useAlbumPhotos, useDeleteAlbum, useSchoolClasses, useUpdatePhotoCategory } from "@/hooks/use-albums";
+import { ALBUM_VISIBILITY_LABELS, ALBUM_VISIBILITY_TONE, PHOTO_CATEGORY_OPTIONS } from "@/config/constants";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,7 @@ export default function AlbumDetailPage({ params }: AlbumDetailPageProps) {
   const { data: classes } = useSchoolClasses(schoolId);
   const { data: photoPages, isLoading: isPhotosLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAlbumPhotos(albumId);
   const deleteAlbum = useDeleteAlbum(schoolId);
+  const updatePhotoCategory = useUpdatePhotoCategory(albumId);
 
   const [editOpen, setEditOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -187,6 +189,22 @@ export default function AlbumDetailPage({ params }: AlbumDetailPageProps) {
                   <figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                     {photo.fileName}
                   </figcaption>
+                  <div className="absolute inset-x-1 top-1" onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={photo.category ?? ""}
+                      onChange={(e) =>
+                        updatePhotoCategory.mutate({ photoId: photo.id, category: e.target.value || null })
+                      }
+                      className="h-7 px-2 pr-7 text-[11px] bg-background/80 backdrop-blur-sm"
+                      aria-label="Photo category"
+                    >
+                      {PHOTO_CATEGORY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </figure>
               ))}
             </div>

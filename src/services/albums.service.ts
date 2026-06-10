@@ -69,6 +69,13 @@ export const albumsService = {
     return data;
   },
 
+  /** Public: a single photo by id (used by the per-photo storefront page). */
+  async getPhoto(photoId: string): Promise<Photo | null> {
+    if (env.useMockApi) return mockDelay(null);
+    const { data } = await apiClient.get<Photo>(`/photos/${photoId}`);
+    return data;
+  },
+
   async create(schoolId: string, input: CreateAlbumInput): Promise<Album> {
     if (env.useMockApi) {
       if (MOCK_ALBUMS.some((a) => a.schoolId === schoolId && a.slug === input.slug)) {
@@ -160,5 +167,14 @@ export const albumsService = {
       return mockDelay(undefined, 300);
     }
     await apiClient.post(`/photos/${photoId}/resolve-flag`, { action });
+  },
+
+  /** Sets the product category for a photo, used to filter relevant items on the parent storefront. */
+  async updatePhotoCategory(photoId: string, category: string | null): Promise<Photo> {
+    if (env.useMockApi) {
+      return mockDelay({ id: photoId, category } as unknown as Photo, 200);
+    }
+    const { data } = await apiClient.patch<Photo>(`/photos/${photoId}`, { category });
+    return data;
   },
 };

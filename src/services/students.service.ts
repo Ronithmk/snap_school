@@ -2,12 +2,20 @@ import { apiClient } from "@/lib/api-client";
 import { env } from "@/config/env";
 import { mockDelay } from "@/services/mock/transport";
 import { MOCK_STUDENTS } from "@/services/mock/seed-data";
-import type { CreateStudentInput, Student } from "@/types";
+import type { Album, CreateStudentInput, Photo, PriceList, Student } from "@/types";
 
 const ENDPOINTS = {
   list: "/students",
   byId: (id: string) => `/students/${id}`,
+  album: (id: string) => `/students/${id}/album`,
 } as const;
+
+export interface StudentAlbumResponse {
+  student: Student;
+  album: Album | null;
+  photos: Photo[];
+  priceList: PriceList | null;
+}
 
 let mockStudents = [...MOCK_STUDENTS];
 
@@ -85,6 +93,17 @@ export const studentsService = {
       return mockDelay(undefined);
     }
     await apiClient.delete(ENDPOINTS.byId(id));
+  },
+
+  /** Public: a student's album, photos, and resolved price list — powers the parent QR landing page. */
+  async getAlbum(id: string): Promise<StudentAlbumResponse | null> {
+    if (env.useMockApi) {
+      const student = mockStudents.find((s) => s.id === id);
+      if (!student) return mockDelay(null);
+      return mockDelay({ student, album: null, photos: [], priceList: null });
+    }
+    const { data } = await apiClient.get<StudentAlbumResponse>(ENDPOINTS.album(id));
+    return data;
   },
 
   /** Regenerate access credentials for a student. */

@@ -24,14 +24,12 @@ function fmtPhoto(p: any) {
     tags: (p.tags ?? []).map((t: any) => ({ id: t.tag.id, label: t.tag.label })),
     isFavorite: p.isFavorite,
     faceValidationStatus: p.faceValidationStatus,
+    category: p.category ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ albumId: string }> }) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
   const { albumId } = await params;
   const { searchParams } = new URL(req.url);
   const page = parseIntParam(searchParams.get("page"), 1);

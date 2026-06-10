@@ -104,6 +104,8 @@ export interface Photo {
   isFavorite?: boolean;
   /** Result of the AI face-recognition check against the album's student reference photo. */
   faceValidationStatus: FaceValidationStatus;
+  /** Photo group/category (e.g. "pose1", "group") — used to filter relevant products in the storefront. */
+  category?: string | null;
   createdAt: ISODateString;
 }
 
