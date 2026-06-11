@@ -69,16 +69,10 @@ export function useLogout() {
   };
 }
 
+/** Registration only creates the account — the user signs in separately afterwards. */
 export function useRegister() {
-  const setSession = useAuthStore((s) => s.setSession);
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (input: RegisterInput) => authService.register(input),
-    onSuccess: ({ session }) => {
-      setSession(session);
-      queryClient.setQueryData(SESSION_QUERY_KEY, session);
-    },
   });
 }
 

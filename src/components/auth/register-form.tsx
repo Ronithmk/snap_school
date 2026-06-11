@@ -122,8 +122,8 @@ export function RegisterForm() {
         schoolName: values.schoolName,
         password: values.password,
       });
-      toast.success("Account created! Welcome to SnapSchool.");
-      router.push(routes.dashboard.root());
+      toast.success("Account created! Please sign in to continue.");
+      router.push(routes.login());
     } catch (err) {
       const msg = (err as ApiError).message ?? "Couldn't create your account. Please try again.";
       setServerError(msg);
