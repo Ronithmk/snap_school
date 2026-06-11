@@ -4,6 +4,7 @@ import {
   Bot,
   Camera,
   GraduationCap,
+  Images,
   LifeBuoy,
   Package,
   ShieldCheck,
@@ -37,13 +38,6 @@ const NAV_PORTALS = [
   { label: "Parent", href: routes.parentLogin(), icon: Users },
   { label: "Studio", href: routes.adminLogin(), icon: Camera },
 ] as const;
-
-const AI_FEATURES = [
-  { icon: Tag, title: "AI face matching & auto-tagging", description: "Photos are automatically matched to students using face recognition, so every album sorts itself." },
-  { icon: Sparkles, title: "Smart album curation", description: "Best-shot detection surfaces the sharpest, best-lit photos so families see the highlights first." },
-  { icon: Wand2, title: "Auto-generated memory books", description: "Turn a class or event album into a downloadable PDF keepsake with one click." },
-  { icon: Camera, title: "Live event uploads", description: "Photos go live in albums in real time as they're captured during the event." },
-];
 
 const MORE_FEATURES = [
   { icon: ShoppingBag, title: "Bulk & group ordering", description: "Schools can place institutional orders for prints and packages in a single checkout." },
@@ -108,74 +102,129 @@ export default async function HomePage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="animate-fade-up">
-              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-foreground/[0.04] px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-                <Sparkles className="h-3 w-3" />
-                School photo platform
-              </span>
-            </div>
-            <h1 className="animate-fade-up delay-75 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-              <span className="text-gradient">School photo galleries,</span>
-              <br />
-              ordered in minutes.
-            </h1>
-            <p className="animate-fade-up delay-150 mt-5 text-balance text-lg text-muted-foreground">
-              Find your school&rsquo;s gallery, browse class and event albums, and order prints or
-              digital downloads — each album has its own cart and checkout.
-            </p>
-          </div>
-
-          <div className="animate-fade-up delay-225 mx-auto mt-10 max-w-xl">
-            <SchoolFinder schools={schools} />
-          </div>
-        </section>
-
-        {/* AI-powered features — big, prominent banner */}
-        <section className="relative overflow-hidden border-y border-violet-200/60 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-background dark:border-violet-900/40 dark:from-violet-950/40 dark:via-fuchsia-950/20 dark:to-background">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-32 right-0 h-[28rem] w-[28rem] rounded-full bg-violet-400/20 blur-3xl"
-          />
-          <div className="relative mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-            <div className="mx-auto mb-12 max-w-2xl text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-300 bg-violet-100 text-violet-700 shadow-[0_8px_30px_oklch(0.6_0.2_300/25%)] dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                <Bot className="h-8 w-8" />
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* Left: copy + search + AI highlights */}
+            <div className="text-center lg:text-left">
+              <div className="animate-fade-up">
+                <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-foreground/[0.04] px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+                  <Sparkles className="h-3 w-3" />
+                  School photo platform
+                </span>
               </div>
-              <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-100 px-3.5 py-1.5 text-sm font-semibold text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                <Sparkles className="h-4 w-4" />
-                AI-powered
-              </span>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-                <span className="text-gradient">Smarter photo operations,</span>
+              <h1 className="animate-fade-up delay-75 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="text-gradient">School photo galleries,</span>
                 <br />
-                powered by AI.
-              </h2>
-              <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
-                From capture to checkout, our studio tools do the heavy lifting — so every
-                album sorts, curates, and ships itself.
+                ordered in minutes.
+              </h1>
+              <p className="animate-fade-up delay-150 mx-auto mt-5 text-balance text-lg text-muted-foreground lg:mx-0">
+                Find your school&rsquo;s gallery, browse class and event albums, and order prints or
+                digital downloads — each album has its own cart and checkout.
               </p>
+
+              <div className="animate-fade-up delay-225 mx-auto mt-8 max-w-xl lg:mx-0">
+                <SchoolFinder schools={schools} />
+              </div>
+
+              {/* AI feature highlights */}
+              <div className="animate-fade-up delay-300 mt-8 flex flex-wrap justify-center gap-2 lg:justify-start">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
+                  <Bot className="h-3.5 w-3.5" />
+                  AI face matching
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Smart curation
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
+                  <Wand2 className="h-3.5 w-3.5" />
+                  Memory books
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
+                  <Camera className="h-3.5 w-3.5" />
+                  Live event uploads
+                </span>
+              </div>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {AI_FEATURES.map(({ icon: Icon, title, description }, i) => (
-                <div
-                  key={title}
-                  className={cn(
-                    "glass animate-fade-up space-y-4 rounded-3xl border border-violet-200/70 bg-white/60 p-6 shadow-[0_4px_24px_oklch(0_0_0/6%)] backdrop-blur-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_12px_40px_oklch(0.6_0.2_300/15%)] dark:border-violet-900/40 dark:bg-violet-950/20",
-                    i === 0 && "delay-75",
-                    i === 1 && "delay-150",
-                    i === 2 && "delay-225",
-                    i === 3 && "delay-300",
-                  )}
-                >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                    <Icon className="h-7 w-7" />
+
+            {/* Right: AI-powered gallery preview */}
+            <div className="animate-fade-up delay-150 relative hidden lg:block">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -right-12 -top-12 h-72 w-72 rounded-full bg-violet-400/20 blur-3xl"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -bottom-12 -left-12 h-72 w-72 rounded-full bg-fuchsia-300/20 blur-3xl"
+              />
+              <div className="glass relative rounded-3xl border border-border p-4 shadow-[0_24px_70px_oklch(0_0_0/14%)]">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-foreground/5">
+                      <Images className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Spring Field Day 2026</p>
+                      <p className="text-xs text-muted-foreground">128 photos · 3 classes</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                    <Bot className="h-3 w-3" />
+                    AI sorted
                   </span>
-                  <h3 className="text-base font-semibold">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
                 </div>
-              ))}
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    "from-amber-200 to-orange-300",
+                    "from-sky-200 to-blue-300",
+                    "from-emerald-200 to-teal-300",
+                    "from-rose-200 to-pink-300",
+                    "from-violet-200 to-fuchsia-300",
+                    "from-lime-200 to-green-300",
+                  ].map((gradient, i) => (
+                    <div
+                      key={gradient}
+                      className={cn(
+                        "relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br",
+                        gradient,
+                      )}
+                    >
+                      {i === 1 && (
+                        <span className="absolute inset-3 rounded-md border-2 border-white/80 shadow-[0_0_0_1px_oklch(0_0_0/15%)]" />
+                      )}
+                      {i === 4 && (
+                        <span className="absolute right-1 top-1 inline-flex items-center gap-0.5 rounded-full bg-white/85 px-1.5 py-0.5 text-[9px] font-semibold text-violet-700 backdrop-blur-sm">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          Best shot
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Floating face-tag chip */}
+                <div className="glass absolute -bottom-5 -left-5 flex items-center gap-2 rounded-2xl border border-border p-3 shadow-[0_8px_24px_oklch(0_0_0/12%)]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                    <Tag className="h-4 w-4" />
+                  </span>
+                  <div className="pr-1">
+                    <p className="text-xs font-semibold">Auto-tagged</p>
+                    <p className="text-[11px] text-muted-foreground">Emma R. · 14 photos</p>
+                  </div>
+                </div>
+
+                {/* Floating memory book chip */}
+                <div className="glass absolute -right-5 -top-5 flex items-center gap-2 rounded-2xl border border-border p-3 shadow-[0_8px_24px_oklch(0_0_0/12%)]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                    <Wand2 className="h-4 w-4" />
+                  </span>
+                  <div className="pr-1">
+                    <p className="text-xs font-semibold">Memory book ready</p>
+                    <p className="text-[11px] text-muted-foreground">Download as PDF</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
