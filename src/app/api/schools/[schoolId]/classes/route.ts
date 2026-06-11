@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import { CACHE_TAGS } from "@/lib/cache";
 
 function fmtClass(c: any, albumCount = 0) {
   return {
@@ -58,6 +60,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
       priceListId: priceListId ?? null,
     },
   });
+
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
 
   return ok(fmtClass(newClass, 0), 201);
 }

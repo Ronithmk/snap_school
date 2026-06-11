@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import { CACHE_TAGS } from "@/lib/cache";
 
 function fmtClass(c: any, albumCount = 0) {
   return {
@@ -60,6 +62,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
   const { classId } = await params;
 
   await db.schoolClass.delete({ where: { id: classId } });
+
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
 
   return new Response(null, { status: 204 });
 }

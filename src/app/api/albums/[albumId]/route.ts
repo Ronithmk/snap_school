@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import { CACHE_TAGS } from "@/lib/cache";
 
 function fmtAlbum(a: any) {
   return {
@@ -84,6 +86,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ a
 
   await db.photo.deleteMany({ where: { albumId } });
   await db.album.delete({ where: { id: albumId } });
+
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
 
   return new Response(null, { status: 204 });
 }
