@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SchoolFormSheet } from "@/components/dashboard";
+import { RouteGuard } from "@/components/auth/route-guard";
 import { useSchools } from "@/hooks/use-tenant";
 import { SCHOOL_STATUS_LABELS, SCHOOL_STATUS_TONE } from "@/config/constants";
 import { routes } from "@/config/routes";
@@ -22,6 +23,7 @@ export default function DashboardSchoolsPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
+    <RouteGuard allowedRoles={["platform_admin"]}>
     <div className="space-y-6">
       <PageHeader
         title="Schools"
@@ -94,5 +96,6 @@ export default function DashboardSchoolsPage() {
 
       <SchoolFormSheet open={createOpen} onOpenChange={setCreateOpen} />
     </div>
+    </RouteGuard>
   );
 }

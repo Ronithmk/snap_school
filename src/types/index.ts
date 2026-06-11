@@ -9,3 +9,5 @@ export * from "./analytics";
 export * from "./lab";
 export * from "./student";
 export * from "./content";
+export * from "./parent";
+export * from "./support";

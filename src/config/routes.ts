@@ -6,8 +6,17 @@ export const routes = {
   login: () => "/auth/login",
   adminLogin: () => "/auth/admin-login",
   register: () => "/auth/register",
+  parentLogin: () => "/auth/parent-login",
+  parentRegister: () => "/auth/parent-register",
+  support: () => "/support",
   forgotPassword: () => "/auth/forgot-password",
   resetPassword: (token?: string) => token ? `/auth/reset-password?token=${token}` : "/auth/reset-password",
+
+  parent: {
+    root: () => "/parent",
+    addChild: () => "/parent/add-child",
+    orders: () => "/parent/orders",
+  },
 
   dashboard: {
     root: () => "/dashboard",
@@ -51,6 +60,7 @@ export const routes = {
     labProducts: () => "/dashboard/lab/products",
     labEditor: (productId: string) => `/dashboard/lab/editor/${productId}`,
     settings: () => "/dashboard/settings",
+    support: () => "/dashboard/support",
   },
 
   storefront: {

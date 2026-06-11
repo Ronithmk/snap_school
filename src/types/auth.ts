@@ -1,7 +1,11 @@
 import type { ID, ISODateString } from "./common";
 
-/** Platform-level admin manages every tenant; school-admin is scoped to their own school(s). */
-export type UserRole = "platform_admin" | "school_admin";
+/**
+ * Platform-level admin (Super Admin / studio team) manages every tenant and all photo
+ * operations; school-admin is a view-only role scoped to their own school(s); parent
+ * is a guardian account scoped to their own children's albums and orders.
+ */
+export type UserRole = "platform_admin" | "school_admin" | "parent";
 
 export interface AuthUser {
   id: ID;

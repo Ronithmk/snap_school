@@ -58,8 +58,9 @@ export const ALBUM_VISIBILITY_TONE: Record<AlbumVisibility, "neutral" | "positiv
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  platform_admin: "Platform Admin",
+  platform_admin: "Super Admin",
   school_admin: "School Admin",
+  parent: "Parent",
 };
 
 export const SHIPPING_OPTIONS: ShippingOption[] = [

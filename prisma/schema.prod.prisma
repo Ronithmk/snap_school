@@ -9,14 +9,15 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
+  id           String          @id @default(cuid())
   name         String
-  email        String        @unique
+  email        String          @unique
   password     String
-  role         String        @default("school_admin")
+  role         String          @default("school_admin")
   avatarUrl    String?
   schoolAdmins SchoolAdmin[]
-  createdAt    DateTime      @default(now())
+  parentLinks  ParentStudent[]
+  createdAt    DateTime        @default(now())
 }
 
 model SchoolAdmin {
@@ -66,17 +67,28 @@ model SchoolClass {
 }
 
 model Student {
-  id            String       @id @default(cuid())
+  id            String          @id @default(cuid())
   schoolId      String
   classId       String?
   number        String?
   name          String
-  username      String       @unique
+  username      String          @unique
   accessCode    String
   coverPhotoUrl String?
-  createdAt     DateTime     @default(now())
-  school        School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class         SchoolClass? @relation(fields: [classId], references: [id])
+  createdAt     DateTime        @default(now())
+  school        School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class         SchoolClass?    @relation(fields: [classId], references: [id])
+  parentLinks   ParentStudent[]
+}
+
+model ParentStudent {
+  userId    String
+  studentId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, studentId])
 }
 
 model Album {
@@ -218,4 +230,14 @@ model PricingRule {
   endsAt         DateTime?
   createdAt      DateTime  @default(now())
   school         School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
 }

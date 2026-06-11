@@ -1,5 +1,19 @@
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkles, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Camera,
+  GraduationCap,
+  LifeBuoy,
+  Package,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+  Tag,
+  Users,
+  Wallet,
+  Wand2,
+} from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -16,6 +30,25 @@ const HIGHLIGHTS = [
   { icon: Sparkles, title: "One link per album", description: "Every class and event gets its own shareable, password-ready gallery." },
   { icon: Wallet, title: "Currency-aware checkout", description: "Country-specific pricing, tax, and live conversion built in from day one." },
   { icon: ShieldCheck, title: "Fully isolated tenants", description: "Each school's albums, carts, and orders stay completely separate." },
+];
+
+const NAV_PORTALS = [
+  { label: "School Admin", href: routes.login(), icon: GraduationCap },
+  { label: "Parent", href: routes.parentLogin(), icon: Users },
+  { label: "Studio", href: routes.adminLogin(), icon: Camera },
+] as const;
+
+const AI_FEATURES = [
+  { icon: Tag, title: "AI face matching & auto-tagging", description: "Photos are automatically matched to students using face recognition, so every album sorts itself." },
+  { icon: Sparkles, title: "Smart album curation", description: "Best-shot detection surfaces the sharpest, best-lit photos so families see the highlights first." },
+  { icon: Wand2, title: "Auto-generated memory books", description: "Turn a class or event album into a downloadable PDF keepsake with one click." },
+  { icon: Camera, title: "Live event uploads", description: "Photos go live in albums in real time as they're captured during the event." },
+];
+
+const MORE_FEATURES = [
+  { icon: ShoppingBag, title: "Bulk & group ordering", description: "Schools can place institutional orders for prints and packages in a single checkout." },
+  { icon: Users, title: "Secure parent portal", description: "Parents get their own account, order history, and access to only their own children's albums." },
+  { icon: Package, title: "Watermarked previews", description: "Browse full galleries with watermarked previews — purchased photos unlock secure, watermark-free downloads." },
 ];
 
 export default async function HomePage() {
@@ -59,13 +92,16 @@ export default async function HomePage() {
 
       {/* Navbar */}
       <header className="glass-navbar sticky top-0 z-30 border-b border-border/60">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {NAV_PORTALS.map(({ label, href, icon: Icon }) => (
+              <Link key={label} href={href} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                <Icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{label}</span>
+              </Link>
+            ))}
             <ThemeToggle />
-            <Link href={routes.login()} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Admin sign in
-            </Link>
           </div>
         </div>
       </header>
@@ -119,6 +155,68 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* AI-powered features */}
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="mb-8 space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
+              <Bot className="h-3.5 w-3.5" />
+              AI-powered
+            </div>
+            <h2 className="text-xl font-semibold tracking-tight">Smarter photo operations</h2>
+            <p className="text-sm text-muted-foreground">From capture to checkout, our studio tools do the heavy lifting.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {AI_FEATURES.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="glass space-y-3 rounded-2xl border border-border p-5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-foreground">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="text-sm font-semibold">{title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* More for everyone */}
+        <section className="border-y border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+            <div className="mb-8 space-y-1">
+              <h2 className="text-xl font-semibold tracking-tight">More for everyone</h2>
+              <p className="text-sm text-muted-foreground">Built for schools, families, and our studio team alike.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {MORE_FEATURES.map(({ icon: Icon, title, description }) => (
+                <div key={title} className="glass space-y-3 rounded-2xl border border-border p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-foreground">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-sm font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              ))}
+              <Link
+                href={routes.support()}
+                className="glass group flex flex-col justify-between space-y-3 rounded-2xl border border-border p-5 transition-all duration-200 hover:border-border/80 hover:shadow-[0_4px_20px_oklch(0_0_0/12%)]"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-foreground">
+                  <LifeBuoy className="h-5 w-5" />
+                </span>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold">Need help?</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Get in touch with our support team for login, order, or refund issues.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-sm font-medium">
+                  Contact support
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Featured schools */}
         {schools.length > 0 && (
           <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
@@ -163,9 +261,14 @@ export default async function HomePage() {
       </main>
 
       <footer className="border-t border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
           <Logo className="text-sm" />
-          <p>&copy; {new Date().getFullYear()} SnapSchool. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href={routes.support()} className="hover:text-foreground hover:underline underline-offset-2">
+              Support
+            </Link>
+            <p>&copy; {new Date().getFullYear()} SnapSchool. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>

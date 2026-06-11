@@ -8,3 +8,5 @@ export { analyticsService } from "./analytics.service";
 export { labService } from "./lab.service";
 export { studentsService } from "./students.service";
 export { contentService } from "./content.service";
+export { parentService } from "./parent.service";
+export { supportService } from "./support.service";

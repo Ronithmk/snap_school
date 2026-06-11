@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useSession } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import type { UserRole } from "@/types";
 
@@ -27,33 +26,23 @@ export function RouteGuard({ allowedRoles, children }: RouteGuardProps) {
   const { user, isAuthenticated, isLoading } = useSession();
 
   const isAllowed = !allowedRoles || (user ? allowedRoles.includes(user.role) : false);
+  const homeForRole = (role?: UserRole) => (role === "parent" ? routes.parent.root() : routes.dashboard.root());
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
       router.replace(`${routes.login()}?from=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [isLoading, isAuthenticated, pathname, router]);
+    if (!isAllowed) {
+      router.replace(homeForRole(user?.role));
+    }
+  }, [isLoading, isAuthenticated, isAllowed, pathname, router, user?.role]);
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !isAuthenticated || !isAllowed) {
     return (
       <div className="flex flex-1 items-center justify-center py-24">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!isAllowed) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-        <ShieldAlert className="h-8 w-8 text-muted-foreground" />
-        <p className="font-medium">You don&rsquo;t have access to this page</p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          Signed in as {user?.name} ({user?.role.replace("_", " ")}). Contact a platform admin if you believe this is a mistake.
-        </p>
-        <Button variant="outline" onClick={() => router.replace(routes.dashboard.root())}>
-          Back to dashboard
-        </Button>
       </div>
     );
   }

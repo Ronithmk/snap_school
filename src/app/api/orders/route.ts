@@ -43,7 +43,17 @@ export async function GET(req: NextRequest) {
   const pageSize = parseIntParam(searchParams.get("pageSize"), 20);
 
   const where: Record<string, any> = {};
-  if (schoolId) where.schoolId = schoolId;
+  if (user.role !== "platform_admin") {
+    const allowedSchoolIds = user.schoolIds ?? [];
+    if (schoolId) {
+      if (!allowedSchoolIds.includes(schoolId)) return err("Unauthorized.", 403);
+      where.schoolId = schoolId;
+    } else {
+      where.schoolId = { in: allowedSchoolIds };
+    }
+  } else if (schoolId) {
+    where.schoolId = schoolId;
+  }
   if (status) where.status = status;
   if (search) {
     where.OR = [

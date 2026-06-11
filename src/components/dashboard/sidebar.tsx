@@ -20,6 +20,7 @@ import {
   Images,
   LayoutDashboard,
   LayoutGrid,
+  LifeBuoy,
   List,
   Megaphone,
   Package,
@@ -58,8 +59,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: routes.dashboard.analytics(), label: "Analytics", icon: BarChart3 },
   { href: routes.dashboard.orders(), label: "Orders", icon: Receipt },
   { href: routes.dashboard.schools(), label: "Schools", icon: LayoutGrid, roles: ["platform_admin"] },
-  { href: routes.dashboard.priceLists(), label: "Price Lists", icon: Tags },
-  { href: routes.dashboard.lab(), label: "Product Lab", icon: Wand2 },
+  { href: routes.dashboard.priceLists(), label: "Price Lists", icon: Tags, roles: ["platform_admin"] },
+  { href: routes.dashboard.lab(), label: "Product Lab", icon: Wand2, roles: ["platform_admin"] },
+  { href: routes.dashboard.support(), label: "Support", icon: LifeBuoy, roles: ["platform_admin"] },
   { href: routes.dashboard.settings(), label: "Settings", icon: Settings },
 ];
 
@@ -134,7 +136,7 @@ function SectionHeader({
 
 // ── School-context nav ────────────────────────────────────────────
 
-function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: () => void }) {
+function SchoolNav({ schoolId, role, onNavigate }: { schoolId: string; role?: UserRole; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   const onClasses =
@@ -166,6 +168,60 @@ function SchoolNav({ schoolId, onNavigate }: { schoolId: string; onNavigate?: ()
   }, [onClasses, onReports, onSalesOverview, onSettings]);
 
   const r = routes.dashboard;
+
+  // School Admin is a view-only role: dashboard, group orders, reports, and invoices only.
+  if (role === "school_admin") {
+    return (
+      <nav className="flex flex-col gap-0.5">
+        <Link
+          href={routes.dashboard.root()}
+          onClick={onNavigate}
+          className="mb-2 flex items-center gap-2 rounded-xl border border-border/60 bg-foreground/[0.03] px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-foreground/6 hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          Overview
+        </Link>
+
+        <NavLink href={r.school(schoolId)} label="Dashboard" icon={LayoutDashboard} onNavigate={onNavigate} />
+        <NavLink href={r.schoolGroupOrders(schoolId)} label="Group order" icon={ShoppingBag} onNavigate={onNavigate} />
+
+        <div className="my-1.5 h-px bg-border/50" />
+
+        <SectionHeader
+          label="Reports"
+          icon={BarChart3}
+          open={reportsOpen}
+          onToggle={() => setReportsOpen((v) => !v)}
+        />
+        {reportsOpen && (
+          <div className="flex flex-col gap-0.5">
+            <NavLink href={r.schoolReportOrders(schoolId)} label="Order history" icon={ClipboardList} indent onNavigate={onNavigate} />
+            <NavLink href={r.schoolReportSales(schoolId)} label="Sales statistics" icon={TrendingUp} indent onNavigate={onNavigate} />
+            <NavLink href={r.schoolReportSalesReport(schoolId)} label="Sales report" icon={Receipt} indent onNavigate={onNavigate} />
+
+            <SectionHeader
+              label="Sales overview"
+              icon={PieChart}
+              open={salesOverviewOpen}
+              onToggle={() => setSalesOverviewOpen((v) => !v)}
+              indent
+            />
+            {salesOverviewOpen && (
+              <div className="flex flex-col gap-0.5 ml-4">
+                <NavLink href={r.schoolReportSalesOverviewByClass(schoolId)} label="View by class" icon={LayoutGrid} indent onNavigate={onNavigate} />
+                <NavLink href={r.schoolReportSalesOverviewStudents(schoolId)} label="Student view" icon={Users} indent onNavigate={onNavigate} />
+              </div>
+            )}
+
+            <NavLink href={r.schoolReportOrdersAwaiting(schoolId)} label="Orders awaiting" icon={Clock} indent onNavigate={onNavigate} />
+            <NavLink href={r.schoolReportCashSummary(schoolId)} label="Summary of cash" icon={Banknote} indent onNavigate={onNavigate} />
+          </div>
+        )}
+
+        <NavLink href={r.schoolInvoices(schoolId)} label="Invoices" icon={Receipt} onNavigate={onNavigate} />
+      </nav>
+    );
+  }
 
   return (
     <nav className="flex flex-col gap-0.5">
@@ -296,7 +352,7 @@ export function DashboardNav({ className, onNavigate }: SidebarProps) {
   if (schoolId) {
     return (
       <div className={cn("flex flex-col gap-1", className)}>
-        <SchoolNav schoolId={schoolId} onNavigate={onNavigate} />
+        <SchoolNav schoolId={schoolId} role={user?.role} onNavigate={onNavigate} />
       </div>
     );
   }
