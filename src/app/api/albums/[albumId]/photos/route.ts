@@ -3,13 +3,13 @@ import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, parseIntParam, paginate } from "@/lib/api-helpers";
 import { processImage, sanitizeFileName } from "@/lib/image";
-import { uploadToR2, R2_PUBLIC_URL } from "@/lib/r2";
+import { uploadToR2, R2_PUBLIC_URL, STORAGE_CONFIGURED } from "@/lib/r2";
 
-// Fallback to local storage if R2 is not configured
+// Fallback to local storage if no object storage is configured
 import fs from "fs";
 import path from "path";
 
-const USE_R2 = !!process.env.R2_ACCOUNT_ID;
+const USE_R2 = STORAGE_CONFIGURED;
 
 function fmtPhoto(p: any) {
   return {
