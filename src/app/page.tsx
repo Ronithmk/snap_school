@@ -86,16 +86,16 @@ export default async function HomePage() {
 
       {/* Navbar */}
       <header className="glass-navbar sticky top-0 z-30 border-b border-border/60">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-2 sm:gap-3">
             {NAV_PORTALS.map(({ label, href, icon: Icon }) => (
-              <Link key={label} href={href} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                <Icon className="h-3.5 w-3.5" />
+              <Link key={label} href={href} className={cn(buttonVariants({ variant: "outline", size: "default" }))}>
+                <Icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             ))}
-            <ThemeToggle />
+            <ThemeToggle size="default" />
           </div>
         </div>
       </header>
@@ -157,8 +157,8 @@ export default async function HomePage() {
                 aria-hidden
                 className="pointer-events-none absolute -bottom-12 -left-12 h-72 w-72 rounded-full bg-fuchsia-300/20 blur-3xl"
               />
-              <div className="glass relative rounded-3xl border border-border p-4 shadow-[0_24px_70px_oklch(0_0_0/14%)]">
-                <div className="mb-3 flex items-center justify-between">
+              <div className="glass relative mx-6 mb-10 mt-6 rounded-3xl border border-border p-5 shadow-[0_24px_70px_oklch(0_0_0/14%)]">
+                <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-foreground/5">
                       <Images className="h-4 w-4" />
@@ -174,27 +174,28 @@ export default async function HomePage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2.5">
                   {[
-                    "from-amber-200 to-orange-300",
-                    "from-sky-200 to-blue-300",
-                    "from-emerald-200 to-teal-300",
-                    "from-rose-200 to-pink-300",
-                    "from-violet-200 to-fuchsia-300",
-                    "from-lime-200 to-green-300",
+                    "from-amber-100 to-orange-200",
+                    "from-sky-100 to-blue-200",
+                    "from-emerald-100 to-teal-200",
+                    "from-rose-100 to-pink-200",
+                    "from-violet-100 to-fuchsia-200",
+                    "from-lime-100 to-green-200",
                   ].map((gradient, i) => (
                     <div
                       key={gradient}
                       className={cn(
-                        "relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br",
+                        "relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ring-1 ring-black/5",
                         gradient,
                       )}
                     >
+                      <Camera className="h-5 w-5 text-foreground/25" />
                       {i === 1 && (
-                        <span className="absolute inset-3 rounded-md border-2 border-white/80 shadow-[0_0_0_1px_oklch(0_0_0/15%)]" />
+                        <span className="absolute inset-2.5 rounded-lg border-2 border-white/90 shadow-[0_0_0_1px_oklch(0_0_0/10%)]" />
                       )}
                       {i === 4 && (
-                        <span className="absolute right-1 top-1 inline-flex items-center gap-0.5 rounded-full bg-white/85 px-1.5 py-0.5 text-[9px] font-semibold text-violet-700 backdrop-blur-sm">
+                        <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-violet-700 shadow-sm backdrop-blur-sm">
                           <Sparkles className="h-2.5 w-2.5" />
                           Best shot
                         </span>
@@ -204,8 +205,8 @@ export default async function HomePage() {
                 </div>
 
                 {/* Floating face-tag chip */}
-                <div className="glass absolute -bottom-5 -left-5 flex items-center gap-2 rounded-2xl border border-border p-3 shadow-[0_8px_24px_oklch(0_0_0/12%)]">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                <div className="glass absolute -bottom-6 -left-4 flex items-center gap-2 rounded-2xl border border-border bg-background/95 p-3 shadow-[0_8px_24px_oklch(0_0_0/14%)]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
                     <Tag className="h-4 w-4" />
                   </span>
                   <div className="pr-1">
@@ -215,8 +216,8 @@ export default async function HomePage() {
                 </div>
 
                 {/* Floating memory book chip */}
-                <div className="glass absolute -right-5 -top-5 flex items-center gap-2 rounded-2xl border border-border p-3 shadow-[0_8px_24px_oklch(0_0_0/12%)]">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                <div className="glass absolute -bottom-6 -right-4 flex items-center gap-2 rounded-2xl border border-border bg-background/95 p-3 shadow-[0_8px_24px_oklch(0_0_0/14%)]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
                     <Wand2 className="h-4 w-4" />
                   </span>
                   <div className="pr-1">

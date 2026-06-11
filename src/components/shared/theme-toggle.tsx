@@ -10,7 +10,11 @@ const OPTIONS: { value: Theme; icon: typeof Sun; label: string }[] = [
   { value: "system", icon: Monitor, label: "System" },
 ];
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  size?: "sm" | "default";
+}
+
+export function ThemeToggle({ size = "sm" }: ThemeToggleProps) {
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
 
@@ -24,13 +28,14 @@ export function ThemeToggle() {
           aria-pressed={theme === value}
           onClick={() => setTheme(value)}
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-150",
+            "flex items-center justify-center rounded-lg transition-all duration-150",
+            size === "default" ? "h-9 w-9" : "h-7 w-7",
             theme === value
               ? "bg-foreground/8 text-foreground shadow-[0_1px_3px_oklch(0_0_0/10%)]"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          <Icon className="h-3.5 w-3.5" />
+          <Icon className={size === "default" ? "h-4 w-4" : "h-3.5 w-3.5"} />
         </button>
       ))}
     </div>
