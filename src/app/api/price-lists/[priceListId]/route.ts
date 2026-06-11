@@ -43,6 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
         previewImageUrl: item.previewImageUrl ?? null,
         unitsIncluded: item.unitsIncluded ?? null,
         category: item.category ?? null,
+        productType: item.productType ?? null,
       })),
     };
   }

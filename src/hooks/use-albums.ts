@@ -63,10 +63,10 @@ export function useDeleteClass(schoolId: string | undefined) {
   });
 }
 
-export function useSchoolAlbums(schoolId: string | undefined, opts: { classId?: string; search?: string } = {}) {
+export function useSchoolAlbums(schoolId: string | undefined, opts: { classId?: string; search?: string; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ["albums", schoolId, opts],
-    queryFn: () => albumsService.listBySchool(schoolId!, { ...opts, pageSize: ALBUM_PAGE_SIZE }),
+    queryFn: () => albumsService.listBySchool(schoolId!, { pageSize: ALBUM_PAGE_SIZE, ...opts }),
     enabled: !!schoolId,
   });
 }

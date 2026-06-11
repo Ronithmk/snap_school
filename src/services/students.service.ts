@@ -8,6 +8,7 @@ const ENDPOINTS = {
   list: "/students",
   byId: (id: string) => `/students/${id}`,
   album: (id: string) => `/students/${id}/album`,
+  ensureForAlbum: (albumId: string) => `/albums/${albumId}/student`,
 } as const;
 
 export interface StudentAlbumResponse {
@@ -103,6 +104,28 @@ export const studentsService = {
       return mockDelay({ student, album: null, photos: [], priceList: null });
     }
     const { data } = await apiClient.get<StudentAlbumResponse>(ENDPOINTS.album(id));
+    return data;
+  },
+
+  /** Get-or-create the "kid" (Student) record for an album, treating each album as one student. */
+  async ensureForAlbum(albumId: string): Promise<Student> {
+    if (env.useMockApi) {
+      const existing = mockStudents.find((s) => s.id === `stu_album_${albumId}`);
+      if (existing) return mockDelay(existing);
+      const student: Student = {
+        id: `stu_album_${albumId}`,
+        schoolId: "",
+        classId: "",
+        number: "",
+        name: "Album",
+        username: genUsername(),
+        accessCode: genCode(),
+        createdAt: new Date().toISOString(),
+      };
+      mockStudents = [...mockStudents, student];
+      return mockDelay(student);
+    }
+    const { data } = await apiClient.post<Student>(ENDPOINTS.ensureForAlbum(albumId));
     return data;
   },
 

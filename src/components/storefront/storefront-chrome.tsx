@@ -56,12 +56,18 @@ export function StorefrontHeader({ school }: TenantHeaderProps) {
         <div className="relative h-40 overflow-hidden sm:h-56">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={school.bannerUrl} alt={school.name} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
         </div>
       )}
 
+      {/* Brand accent strip */}
+      <div
+        className="h-0.5 w-full bg-gradient-to-r from-primary via-primary/40 to-transparent"
+        style={primaryColor ? { background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}40, transparent)` } : undefined}
+      />
+
       <header
-        className="sticky top-0 z-30 border-b border-border/60 glass-navbar"
+        className="sticky top-0 z-30 border-b border-border/60 glass-navbar shadow-sm"
         style={borderStyle}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
@@ -107,7 +113,7 @@ export function StorefrontFooter({ school }: TenantHeaderProps) {
   const hasSocial = settings?.whatsappNumber || settings?.instagramUrl || settings?.facebookUrl;
 
   return (
-    <footer className="border-t border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+    <footer className="border-t border-border/50 bg-gradient-to-b from-transparent to-muted/40 backdrop-blur-sm">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">{footerText}</p>

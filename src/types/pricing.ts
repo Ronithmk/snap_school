@@ -17,6 +17,8 @@ export interface PriceListItem {
   previewImageUrl?: string;
   /** Restricts this item to photos tagged with the same category. Null/empty = available for all photos. */
   category?: string | null;
+  /** Drives the dynamic storefront mockup (e.g. "print_1", "mug") — see `PRODUCT_MOCKUPS`. */
+  productType?: string | null;
 }
 
 export interface BulkDiscountTier {

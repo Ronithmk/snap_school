@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
               previewImageUrl: item.previewImageUrl ?? null,
               unitsIncluded: item.unitsIncluded ?? null,
               category: item.category ?? null,
+              productType: item.productType ?? null,
             })),
           }
         : undefined,

@@ -172,6 +172,7 @@ model PriceListItem {
   previewImageUrl String?
   unitsIncluded   Int?
   category        String?
+  productType     String?
   priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
 }
 

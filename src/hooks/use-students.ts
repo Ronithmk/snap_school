@@ -49,6 +49,18 @@ export function useStudentAlbum(studentId: string | undefined) {
   });
 }
 
+/** Get-or-create the "kid" (Student) record for an album, treating each album as one student. */
+export function useEnsureAlbumStudent(schoolId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (albumId: string) => studentsService.ensureForAlbum(albumId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students", schoolId] });
+      queryClient.invalidateQueries({ queryKey: ["albums", schoolId] });
+    },
+  });
+}
+
 export function useRegenerateCredentials(schoolId: string) {
   const queryClient = useQueryClient();
   return useMutation({

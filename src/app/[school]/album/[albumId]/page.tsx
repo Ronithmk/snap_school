@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { WatermarkOverlay } from "@/components/storefront/watermark-overlay";
+import { ProductMockup } from "@/components/storefront/product-mockup";
 import { useAlbum } from "@/hooks/use-albums";
 import { useAlbumCart } from "@/hooks/use-cart";
 import { useDefaultPriceListForSchool, usePriceLists } from "@/hooks/use-pricing";
@@ -15,6 +16,7 @@ import { useSchoolBySlug } from "@/hooks/use-tenant";
 import { hasAlbumAccess } from "@/lib/album-access";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
+import { PRODUCT_MOCKUP_BY_TYPE } from "@/config/product-mockups";
 import { cn } from "@/lib/utils";
 import type { PriceListItem } from "@/types";
 import type { WatermarkSettings } from "@/types/tenant";
@@ -123,46 +125,55 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   return (
     <div className="flex h-[calc(100svh-64px)] overflow-hidden">
       {/* ── Left thumbnail strip ── */}
-      <aside className="hidden w-[88px] flex-shrink-0 flex-col overflow-y-auto border-r border-border bg-background p-1.5 sm:flex">
+      <aside className="hidden w-[88px] flex-shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-background p-1.5 sm:flex">
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-1 pt-6 text-center">
             <ShoppingCart className="h-5 w-5 text-muted-foreground/30" />
             <p className="text-[9px] leading-tight text-muted-foreground/60">Add items to see them here</p>
           </div>
         ) : (
-          cartItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setSelectedItemId(item.id)}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-lg p-1.5 text-center transition-colors hover:bg-accent",
-                selectedItemId === item.id && "ring-2 ring-primary/60 bg-primary/5",
-              )}
-            >
-              <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.previewImageUrl ?? album.coverImageUrl}
-                  alt={item.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <span className="line-clamp-2 text-[9px] leading-tight text-muted-foreground">{item.name}</span>
-            </button>
-          ))
+          cartItems.map((item) => {
+            const mockup = item.productType ? PRODUCT_MOCKUP_BY_TYPE.get(item.productType) : undefined;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedItemId(item.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-lg p-1.5 text-center transition-colors hover:bg-accent",
+                  selectedItemId === item.id && "ring-2 ring-primary/60 bg-primary/5",
+                )}
+              >
+                <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
+                  {mockup ? (
+                    <ProductMockup layout={mockup.layout} photoUrl={album.coverImageUrl} className="h-full" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.previewImageUrl ?? album.coverImageUrl}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+                <span className="line-clamp-2 text-[9px] leading-tight text-muted-foreground">{item.name}</span>
+              </button>
+            );
+          })
         )}
       </aside>
 
       {/* ── Center product preview ── */}
-      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
         {/* Breadcrumb */}
-        <nav className="absolute left-4 top-3 flex items-center gap-1 text-xs text-neutral-500">
+        <nav className="absolute left-4 top-3 z-10 flex items-center gap-1 rounded-full bg-background/70 px-3 py-1 text-xs text-neutral-500 shadow-sm backdrop-blur">
           <Link href={routes.storefront.school(schoolSlug)} className="hover:text-foreground transition-colors">
             {school.name}
           </Link>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-neutral-700 dark:text-neutral-300">{album.title}</span>
+          <span className="font-medium text-neutral-700 dark:text-neutral-300">{album.title}</span>
         </nav>
 
         {selectedItem ? (
@@ -176,6 +187,11 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
 
       {/* ── Right price list panel ── */}
       <aside className="flex w-[272px] flex-shrink-0 flex-col border-l border-border bg-background">
+        {/* Header */}
+        <div className="border-b border-border px-4 py-3">
+          <p className="text-sm font-semibold tracking-tight">Products &amp; prints</p>
+          <p className="text-xs text-muted-foreground">Pick what you&apos;d like for {album.title}</p>
+        </div>
         {/* Scrollable item rows */}
         <div className="flex-1 divide-y divide-border overflow-y-auto">
           {priceList.items.map((item) => {
@@ -189,10 +205,12 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
                 onClick={() => setSelectedItemId(item.id)}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedItemId(item.id)}
                 className={cn(
-                  "group flex cursor-pointer items-center gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  "group relative flex cursor-pointer items-center gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                   isSelected && "bg-primary/5",
+                  qty > 0 && "bg-emerald-50/60 dark:bg-emerald-900/10",
                 )}
               >
+                {isSelected && <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" />}
                 {/* Name + description */}
                 <div className="min-w-0 flex-1">
                   <p className={cn("text-sm font-medium leading-snug", isSelected && "text-primary")}>
@@ -222,14 +240,14 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
                     type="button"
                     aria-label="Increase quantity"
                     onClick={() => setItemQty(item, qty + 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
                   >
                     <Plus className="h-2.5 w-2.5" />
                   </button>
                 </div>
 
                 {/* Price */}
-                <p className="w-14 shrink-0 text-right text-sm font-semibold">
+                <p className={cn("w-14 shrink-0 text-right text-sm font-semibold tabular-nums", qty > 0 && "text-primary")}>
                   {formatCurrency(item.amount, currencyCode)}
                 </p>
 
@@ -249,18 +267,19 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
         </div>
 
         {/* Subtotal + View Cart */}
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border bg-muted/30 p-4">
           <div className="mb-3 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
               Subtotal ({totalItems} article{totalItems !== 1 ? "s" : ""})
             </span>
-            <span className="font-bold">{formatCurrency(subtotal, currencyCode)}</span>
+            <span className="text-base font-bold">{formatCurrency(subtotal, currencyCode)}</span>
           </div>
           <Link
             href={routes.storefront.cart(schoolSlug, albumId)}
             className={cn(
               buttonVariants({ variant: totalItems > 0 ? "default" : "outline" }),
-              "w-full justify-center",
+              "w-full justify-center shadow-sm",
+              totalItems > 0 && "shadow-primary/20",
             )}
           >
             <ShoppingCart className="h-4 w-4" />
@@ -284,23 +303,29 @@ function ProductPreview({
   watermark?: WatermarkSettings;
 }) {
   const imageUrl = item.previewImageUrl ?? coverUrl;
+  const mockup = item.productType ? PRODUCT_MOCKUP_BY_TYPE.get(item.productType) : undefined;
 
   return (
     <div className="flex max-w-2xl flex-col items-center gap-5 px-8 py-6 text-center">
       {/* Mockup image */}
       <div
         data-protected
-        className="relative w-full max-w-[480px] overflow-hidden rounded-lg shadow-2xl"
+        className="relative w-full max-w-[320px] overflow-hidden rounded-lg shadow-2xl"
+        style={mockup ? undefined : { maxWidth: "480px" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt={item.name}
-          draggable={false}
-          className="w-full select-none object-contain"
-          style={{ maxHeight: "58vh" }}
-          onDragStart={(e) => e.preventDefault()}
-        />
+        {mockup ? (
+          <ProductMockup layout={mockup.layout} photoUrl={coverUrl} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={item.name}
+            draggable={false}
+            className="w-full select-none object-contain"
+            style={{ maxHeight: "58vh" }}
+            onDragStart={(e) => e.preventDefault()}
+          />
+        )}
         <WatermarkOverlay watermark={watermark} />
       </div>
 

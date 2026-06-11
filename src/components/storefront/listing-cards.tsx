@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ImageIcon, Lock, Users } from "lucide-react";
+import { ArrowRight, ImageIcon, Lock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { routes } from "@/config/routes";
@@ -13,17 +13,21 @@ interface ClassCardProps {
 export function ClassCard({ school, schoolClass }: ClassCardProps) {
   return (
     <Link href={routes.storefront.class(school.slug, schoolClass.slug)}>
-      <Card className="group h-full transition-all hover:-translate-y-0.5 hover:shadow-md">
-        <div className="space-y-2 p-5">
-          <p className="font-semibold tracking-tight transition-colors group-hover:text-primary">{schoolClass.name}</p>
+      <Card className="group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent opacity-70 transition-opacity group-hover:opacity-100" />
+        <div className="space-y-3 p-5">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold tracking-tight transition-colors group-hover:text-primary">{schoolClass.name}</p>
+            <ArrowRight className="h-4 w-4 -translate-x-1 text-muted-foreground/40 opacity-0 transition-all group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
+          </div>
           {schoolClass.grouping ? <p className="text-sm text-muted-foreground">{schoolClass.grouping}</p> : null}
           <div className="flex items-center gap-4 pt-1 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1">
               <ImageIcon className="h-3.5 w-3.5" />
               {schoolClass.albumCount} {schoolClass.albumCount === 1 ? "album" : "albums"}
             </span>
             {schoolClass.studentCount ? (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1">
                 <Users className="h-3.5 w-3.5" />
                 {schoolClass.studentCount} students
               </span>
@@ -43,28 +47,34 @@ interface AlbumCardProps {
 export function AlbumCard({ school, album }: AlbumCardProps) {
   return (
     <Link href={routes.storefront.album(school.slug, album.id)}>
-      <Card className="group h-full overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <Card className="group h-full overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={album.coverImageUrl}
             alt={album.title}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-80 transition-opacity group-hover:opacity-100" />
           {album.passwordProtected ? (
             <Badge variant="neutral" className="absolute right-2.5 top-2.5 gap-1 bg-background/80 backdrop-blur">
               <Lock className="h-3 w-3" />
               Protected
             </Badge>
           ) : null}
+          <div className="absolute inset-x-0 bottom-0 space-y-0.5 p-3">
+            <p className="truncate text-sm font-semibold tracking-tight text-white drop-shadow">{album.title}</p>
+            <p className="flex items-center gap-1 text-xs text-white/80">
+              <ImageIcon className="h-3 w-3" />
+              {album.photoCount} photos
+              {album.eventDate ? ` · ${new Date(album.eventDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}` : ""}
+            </p>
+          </div>
         </div>
-        <div className="space-y-1 p-4">
-          <p className="truncate font-medium tracking-tight transition-colors group-hover:text-primary">{album.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {album.photoCount} photos
-            {album.eventDate ? ` · ${new Date(album.eventDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}` : ""}
-          </p>
+        <div className="flex items-center justify-between px-3 py-2 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+          View album
+          <ArrowRight className="h-3.5 w-3.5" />
         </div>
       </Card>
     </Link>

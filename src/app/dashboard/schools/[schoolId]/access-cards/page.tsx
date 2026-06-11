@@ -2,7 +2,7 @@
 
 import { use, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Printer, Users } from "lucide-react";
+import { ChevronRight, ImageIcon, Loader2, MessageCircle, Printer, Sparkles, Users } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar } from "@/components/ui/avatar";
@@ -12,9 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AccessCardTemplate } from "@/components/dashboard/access-card-template";
 import { useSchool } from "@/hooks/use-tenant";
 import { useSchoolClasses, useSchoolAlbums } from "@/hooks/use-albums";
-import { useStudents } from "@/hooks/use-students";
+import { useStudents, useEnsureAlbumStudent } from "@/hooks/use-students";
 import { routes } from "@/config/routes";
-import type { Student } from "@/types";
+import type { Album, Student } from "@/types";
 
 type PaperSize = "A5" | "A4" | "A3";
 type CardsPerPage = 1 | 2 | 4;
@@ -64,6 +64,11 @@ function getPrintLayout(paperSize: PaperSize, cpp: CardsPerPage) {
   return { pW, pH, cols, rows, orientation, cellW, cellH, scale, margin, gap };
 }
 
+interface Kid {
+  album: Album;
+  student: Student | null;
+}
+
 interface AccessCardsPageProps {
   params: Promise<{ schoolId: string }>;
 }
@@ -72,49 +77,62 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
   const { schoolId } = use(params);
   const { data: school, isLoading: schoolLoading } = useSchool(schoolId);
   const { data: classes } = useSchoolClasses(schoolId);
-  const { data: albums } = useSchoolAlbums(schoolId);
   const [classFilter, setClassFilter] = useState<string>("all");
+  const { data: albums, isLoading: albumsLoading } = useSchoolAlbums(schoolId, {
+    classId: classFilter !== "all" ? classFilter : undefined,
+    pageSize: 200,
+  });
+  const { data: students, isLoading: studentsLoading } = useStudents(schoolId);
+  const ensureStudent = useEnsureAlbumStudent(schoolId);
+
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [orderClosingDate, setOrderClosingDate] = useState<string>("");
-  const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
   const [printOptionIdx, setPrintOptionIdx] = useState(0);
   const printRef = useRef<HTMLDivElement>(null);
 
   const { paperSize, cpp: cardsPerPage } = PRINT_OPTIONS[printOptionIdx];
 
-  const { data: students, isLoading: studentsLoading } = useStudents(
-    schoolId,
-    classFilter !== "all" ? classFilter : undefined
-  );
+  const studentMap = new Map((students ?? []).map((s) => [s.id, s]));
 
-  const filteredStudents = students ?? [];
+  // 1 album = 1 kid: every album becomes a card; the linked Student (if any) supplies access credentials.
+  const kids: Kid[] = (albums?.data ?? []).map((album) => ({
+    album,
+    student: album.studentId ? (studentMap.get(album.studentId) ?? null) : null,
+  }));
+
+  const kidsWithCards = kids.filter((k) => k.student);
 
   const allSelected =
-    filteredStudents.length > 0 && filteredStudents.every((s) => selected.has(s.id));
+    kidsWithCards.length > 0 && kidsWithCards.every((k) => selected.has(k.album.id));
 
   function toggleAll() {
     if (allSelected) {
       setSelected((prev) => {
         const next = new Set(prev);
-        filteredStudents.forEach((s) => next.delete(s.id));
+        kidsWithCards.forEach((k) => next.delete(k.album.id));
         return next;
       });
     } else {
       setSelected((prev) => {
         const next = new Set(prev);
-        filteredStudents.forEach((s) => next.add(s.id));
+        kidsWithCards.forEach((k) => next.add(k.album.id));
         return next;
       });
     }
   }
 
-  function toggleOne(id: string) {
+  function toggleOne(albumId: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(albumId)) next.delete(albumId);
+      else next.add(albumId);
       return next;
     });
+  }
+
+  async function handleGenerate(albumId: string) {
+    const result = await ensureStudent.mutateAsync(albumId);
+    if (result) setSelected((prev) => new Set(prev).add(albumId));
   }
 
   function handlePrint() {
@@ -178,28 +196,23 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
     });
   }
 
-  const selectedStudents = filteredStudents.filter((s) => selected.has(s.id));
+  const selectedKids = kidsWithCards.filter((k) => selected.has(k.album.id));
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const activeAlbum = albums?.data.find((a) => a.id === selectedAlbumId) ?? albums?.data[0];
 
   function buildCartUrl(student: Student) {
     if (!school) return origin;
     return `${origin}${routes.storefront.parent(school.slug, student.id)}`;
   }
 
-  function buildGalleryUrl(student: Student) {
+  function buildGalleryUrl(album: Album) {
     if (!school) return origin;
-    // Prefer the student's own album (1 album = 1 kid = 1 access card, fully isolated from other kids).
-    const ownAlbum = albums?.data.find((a) => a.studentId === student.id);
-    const album = ownAlbum ?? activeAlbum;
-    if (!album) return origin;
     return `${origin}${routes.storefront.album(school.slug, album.id)}`;
   }
 
   const classMap = new Map((classes ?? []).map((c) => [c.id, c]));
 
-  const isLoading = schoolLoading || studentsLoading;
+  const isLoading = schoolLoading || albumsLoading || studentsLoading;
 
   return (
     <>
@@ -226,17 +239,17 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
 
         <PageHeader
           title="Access Cards"
-          description="Generate printable access cards with login credentials and QR codes for students."
+          description="Each album is treated as one kid — generate a printable access card with login credentials and a QR code linking straight to their own gallery."
           actions={
             <div className="flex gap-2">
               {selected.size > 0 && (
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const album = (albums?.data ?? []).find((a) => a.id === (selectedAlbumId || albums?.data[0]?.id));
-                    const lines = selectedStudents.map((s) => `• ${s.name}: *${s.username}* / ${s.accessCode}`).join("\n");
-                    const origin = typeof window !== "undefined" ? window.location.origin : "";
-                    const msg = `📸 Photo album access credentials${album ? ` for *${album.title}*` : ""}:\n\n${lines}${album ? `\n\nGallery: ${origin}/${school?.slug}/album/${album.id}` : ""}`;
+                    const lines = selectedKids
+                      .map((k) => `• ${k.album.title}: *${k.student!.username}* / ${k.student!.accessCode}\n  Gallery: ${buildGalleryUrl(k.album)}`)
+                      .join("\n\n");
+                    const msg = `📸 Photo album access credentials:\n\n${lines}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
                   }}
                 >
@@ -266,21 +279,6 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
               <option value="all">All classes</option>
               {(classes ?? []).map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Album (for cart link)
-            </label>
-            <Select
-              value={selectedAlbumId || albums?.data[0]?.id || ""}
-              onChange={(e) => setSelectedAlbumId(e.target.value)}
-              containerClassName="w-56"
-            >
-              {(albums?.data ?? []).map((a) => (
-                <option key={a.id} value={a.id}>{a.title}</option>
               ))}
             </Select>
           </div>
@@ -321,18 +319,18 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
           </div>
         </div>
 
-        {/* ── Student grid ── */}
+        {/* ── Kid grid ── */}
         {isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full rounded-xl" />
             ))}
           </div>
-        ) : filteredStudents.length === 0 ? (
+        ) : kids.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No students found"
-            description="Add students to this school to generate access cards."
+            title="No albums found"
+            description="Create an album for each kid in this school to generate access cards."
           />
         ) : (
           <>
@@ -340,9 +338,10 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
               <button
                 type="button"
                 onClick={toggleAll}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                disabled={kidsWithCards.length === 0}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
               >
-                {allSelected ? "Deselect all" : `Select all (${filteredStudents.length})`}
+                {allSelected ? "Deselect all" : `Select all (${kidsWithCards.length})`}
               </button>
               {selected.size > 0 && (
                 <span className="text-sm font-medium text-primary">
@@ -352,14 +351,48 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredStudents.map((student) => {
-                const isSelected = selected.has(student.id);
-                const cls = classMap.get(student.classId);
+              {kids.map(({ album, student }) => {
+                const isSelected = selected.has(album.id);
+                const cls = album.classId ? classMap.get(album.classId) : undefined;
+                const isGenerating = ensureStudent.isPending && ensureStudent.variables === album.id;
+
+                if (!student) {
+                  return (
+                    <div
+                      key={album.id}
+                      className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card/50 p-3"
+                    >
+                      <Avatar
+                        src={album.coverImageUrl}
+                        alt={album.title}
+                        fallback={album.title.charAt(0)}
+                        className="h-10 w-10 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{album.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cls ? cls.name : "No class"} · {album.photoCount} photo{album.photoCount === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 gap-1.5 text-xs"
+                        disabled={isGenerating}
+                        onClick={() => handleGenerate(album.id)}
+                      >
+                        {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                        Generate
+                      </Button>
+                    </div>
+                  );
+                }
+
                 return (
                   <button
-                    key={student.id}
+                    key={album.id}
                     type="button"
-                    onClick={() => toggleOne(student.id)}
+                    onClick={() => toggleOne(album.id)}
                     className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
                       isSelected
                         ? "border-primary bg-primary/5 ring-1 ring-primary/30"
@@ -378,19 +411,21 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
                       )}
                     </div>
                     <Avatar
-                      src={student.coverPhotoUrl}
-                      alt={student.name}
-                      fallback={student.name.charAt(0)}
+                      src={album.coverImageUrl || student.coverPhotoUrl}
+                      alt={album.title}
+                      fallback={album.title.charAt(0)}
                       className="h-10 w-10 shrink-0"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{student.name}</p>
+                      <p className="truncate text-sm font-medium">{album.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        #{student.number}
-                        {cls ? ` · ${cls.name}` : ""}
+                        {cls ? cls.name : "No class"} · {album.photoCount} photo{album.photoCount === 1 ? "" : "s"}
                       </p>
                       <p className="truncate text-xs text-muted-foreground font-mono">{student.username}</p>
                     </div>
+                    {album.coverImageUrl ? (
+                      <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    ) : null}
                   </button>
                 );
               })}
@@ -401,14 +436,14 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
 
       {/* ── Cards container — always in DOM so we can read innerHTML for the new window ── */}
       <div ref={printRef} className="hidden">
-        {school && selectedStudents.map((student) => (
+        {school && selectedKids.map(({ album, student }) => (
           <AccessCardTemplate
-            key={student.id}
-            student={student}
+            key={album.id}
+            student={student!}
             school={school}
-            schoolClass={classMap.get(student.classId)}
-            galleryUrl={buildGalleryUrl(student)}
-            cartUrl={buildCartUrl(student)}
+            schoolClass={album.classId ? classMap.get(album.classId) : undefined}
+            galleryUrl={buildGalleryUrl(album)}
+            cartUrl={buildCartUrl(student!)}
             orderClosingDate={orderClosingDate}
           />
         ))}

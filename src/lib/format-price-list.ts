@@ -8,6 +8,7 @@ type PrismaPriceListItemRow = {
   previewImageUrl: string | null;
   unitsIncluded: number | null;
   category: string | null;
+  productType?: string | null;
 };
 
 type PrismaBulkDiscountTierRow = {
@@ -40,6 +41,7 @@ function fmtItem(item: PrismaPriceListItemRow) {
     previewImageUrl: item.previewImageUrl ?? null,
     unitsIncluded: item.unitsIncluded ?? null,
     category: item.category ?? null,
+    productType: item.productType ?? null,
   };
 }
 

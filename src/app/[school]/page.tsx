@@ -2,9 +2,8 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Search, Tag } from "lucide-react";
+import { Camera, ImageIcon, Search, Sparkles, Tag, Users } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
-import { PageHeader } from "@/components/shared/page-header";
 import { SkeletonGrid } from "@/components/shared/skeleton-grid";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,13 +149,58 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
   const promotions = activeBlocks.filter((b) => b.type === "promotion");
   const sponsors = activeBlocks.filter((b) => b.type === "sponsor");
 
+  const totalPhotos = (albums?.data ?? []).reduce((sum, a) => sum + a.photoCount, 0);
+  const primaryColor = school.settings?.primaryColor;
+
   return (
     <>
       {/* Announcement bars — above all content */}
       {announcements.map((b) => <AnnouncementBar key={b.id} block={b} />)}
 
+      {/* Default hero — only when the school hasn't configured a CMS banner */}
+      {banners.length === 0 && (
+        <div
+          className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"
+          style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}26, ${primaryColor}08, transparent)` } : undefined}
+        >
+          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 left-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-background/60 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              Photo gallery & store
+            </span>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{school.name}</h1>
+            <p className="mt-2 max-w-xl text-muted-foreground sm:text-lg">
+              {school.description ?? "Browse class albums and order your favorite photos."}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
+                <ImageIcon className="h-4 w-4 text-primary" />
+                {albums?.meta.total ?? albums?.data.length ?? 0} albums
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
+                <Camera className="h-4 w-4 text-primary" />
+                {totalPhotos}+ photos
+              </span>
+              {classes && classes.length > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
+                  <Users className="h-4 w-4 text-primary" />
+                  {classes.length} {classes.length === 1 ? "class" : "classes"}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12">
-        <PageHeader title={school.name} description={school.description ?? "Browse class albums and order your favorite photos."} />
+        {banners.length > 0 && (
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{school.name}</h1>
+            {school.description && <p className="text-muted-foreground">{school.description}</p>}
+          </div>
+        )}
 
         {/* Hero banners */}
         {banners.length > 0 && (
@@ -173,7 +217,10 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
         )}
 
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Classes</h2>
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-semibold tracking-tight">Classes</h2>
+          </div>
           {isClassesLoading || !classes ? (
             <SkeletonGrid count={4} />
           ) : classes.length === 0 ? (
@@ -189,7 +236,10 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
 
         <section className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">All albums</h2>
+            <div className="flex items-center gap-2">
+              <span className="h-5 w-1 rounded-full bg-primary" />
+              <h2 className="text-lg font-semibold tracking-tight">All albums</h2>
+            </div>
             <div className="relative sm:w-72">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search albums…" className="pl-9" aria-label="Search albums" />

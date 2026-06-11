@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Sparkles,
   Star,
   Tag,
   Trash2,
@@ -28,6 +29,7 @@ import { usePriceLists, useUpdatePriceList } from "@/hooks/use-pricing";
 import { useSchool } from "@/hooks/use-tenant";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
+import { PRODUCT_MOCKUPS } from "@/config/product-mockups";
 import type { ApiError, PriceItemType, PriceList, PriceListItem } from "@/types";
 
 interface Props { params: Promise<{ schoolId: string }> }
@@ -87,6 +89,7 @@ export default function SchoolPriceListsPage({ params }: Props) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PriceList | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [addingCommon, setAddingCommon] = useState(false);
 
   useEffect(() => {
     if (priceLists && priceLists.length > 0 && !selectedId) {
@@ -134,6 +137,36 @@ export default function SchoolPriceListsPage({ params }: Props) {
       toast.success(`"${pl.name}" is now the default price list.`);
     } catch (err) {
       toast.error((err as unknown as ApiError).message ?? "Couldn't update. Please try again.");
+    }
+  }
+
+  async function handleAddCommonProducts() {
+    if (!activeList) return;
+    const existingTypes = new Set(activeList.items.map((i) => i.productType).filter(Boolean));
+    const newPresets = PRODUCT_MOCKUPS.filter((p) => !existingTypes.has(p.productType));
+    if (newPresets.length === 0) {
+      toast.info("All common products are already in this price list.");
+      return;
+    }
+    setAddingCommon(true);
+    try {
+      const items: Omit<PriceListItem, "id">[] = [
+        ...activeList.items.map(({ id: _id, ...rest }) => rest),
+        ...newPresets.map((p) => ({
+          type: p.type,
+          name: p.name,
+          description: p.description,
+          amount: p.amount,
+          unitsIncluded: p.unitsIncluded,
+          productType: p.productType,
+        })),
+      ];
+      await updatePriceList.mutateAsync({ id: activeList.id, input: { items } });
+      toast.success(`Added ${newPresets.length} common product${newPresets.length === 1 ? "" : "s"}.`);
+    } catch (err) {
+      toast.error((err as unknown as ApiError).message ?? "Couldn't add products. Please try again.");
+    } finally {
+      setAddingCommon(false);
     }
   }
 
@@ -240,7 +273,11 @@ export default function SchoolPriceListsPage({ params }: Props) {
                 All products configured correctly
               </span>
             )}
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleAddCommonProducts} disabled={!activeList || addingCommon}>
+                {addingCommon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                Add common products
+              </Button>
               <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
                 <Plus className="h-3.5 w-3.5" />Add products
               </Button>

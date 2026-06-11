@@ -73,25 +73,25 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-3 lg:col-span-2">
             {cart.items.map((item) => (
-              <Card key={item.id}>
+              <Card key={item.id} className="border-border/60 transition-shadow hover:shadow-sm">
                 <CardContent className="flex items-center gap-4 p-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.thumbnailUrl} alt={item.name} className="h-16 w-16 shrink-0 rounded-md object-cover" />
+                  <img src={item.thumbnailUrl} alt={item.name} className="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-border" />
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">{formatCurrency(item.unitPrice, currencyCode)} each</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">
+                  <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 p-0.5">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">
                       <Minus className="h-3.5 w-3.5" />
                     </Button>
-                    <span className="w-8 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">
+                    <span className="w-6 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <p className="w-20 shrink-0 text-right text-sm font-semibold">{formatCurrency(item.unitPrice * item.quantity, currencyCode)}</p>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeItem(item.id)} aria-label="Remove item">
+                  <p className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.unitPrice * item.quantity, currencyCode)}</p>
+                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} aria-label="Remove item">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -99,16 +99,17 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
             ))}
           </div>
 
-          <div className="space-y-4">
-            <Card>
+          <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            <Card className="border-border/60 shadow-sm">
               <CardContent className="space-y-4 p-5">
+                <p className="text-sm font-semibold tracking-tight">Order summary</p>
                 <CouponField
                   appliedCode={cart.coupon?.code ?? null}
                   onApply={(code) => applyCoupon({ code, discountPercent: 10 })}
                   onRemove={removeCoupon}
                 />
                 {totals ? <OrderSummary totals={totals} currencyCode={currencyCode} taxLabel={school.settings.tax.label || "Tax"} /> : null}
-                <Button className="w-full" size="lg" onClick={() => router.push(routes.storefront.checkout(schoolSlug, albumId))}>
+                <Button className="w-full shadow-sm shadow-primary/20" size="lg" onClick={() => router.push(routes.storefront.checkout(schoolSlug, albumId))}>
                   Proceed to checkout
                 </Button>
               </CardContent>
