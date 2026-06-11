@@ -13,8 +13,13 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem("snapschool.auth.token");
-    if (token) config.headers.set("Authorization", `Bearer ${token}`);
+    try {
+      const raw = window.localStorage.getItem("snapschool.auth");
+      const token = raw ? JSON.parse(raw)?.state?.session?.token : null;
+      if (token) config.headers.set("Authorization", `Bearer ${token}`);
+    } catch {
+      // Ignore malformed/missing persisted auth state.
+    }
   }
   return config;
 });

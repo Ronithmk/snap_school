@@ -13,14 +13,14 @@ export function useSession() {
   const setSession = useAuthStore((s) => s.setSession);
 
   const query = useQuery({
-    queryKey: SESSION_QUERY_KEY,
+    queryKey: [...SESSION_QUERY_KEY, session?.token],
     queryFn: async () => {
       if (!session?.token) return null;
       const fresh = await authService.getSession(session.token);
       if (!fresh) setSession(null);
       return fresh;
     },
-    initialData: session,
+    initialData: session ?? undefined,
     staleTime: Infinity,
     enabled: !!session?.token,
   });
