@@ -2,13 +2,15 @@
 
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen, Search, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductMockup } from "@/components/storefront/product-mockup";
+import { PRODUCT_MOCKUPS } from "@/config/product-mockups";
 import { usePublishedLabProducts } from "@/hooks/use-lab";
 import { useSchool } from "@/hooks/use-tenant";
 import { formatCurrency } from "@/config/currency";
@@ -64,6 +66,44 @@ export default function SchoolCataloguePage({ params }: Props) {
         title="Catalogue"
         description="Platform-published products available to all schools."
       />
+
+      {/* Common products — shared catalog with per-kid dynamic photos */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-semibold tracking-tight">Common products</h2>
+          </div>
+          <Link href={routes.dashboard.schoolPriceLists(schoolId)} className="text-xs font-medium text-primary hover:underline">
+            Add to a price list
+          </Link>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Same products for every school — the photo on each mockup is dynamic and shows each kid&apos;s own photo on their storefront page.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {PRODUCT_MOCKUPS.map((preset) => (
+            <div key={preset.productType} className="overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
+              <div className="flex items-center justify-center bg-muted p-4">
+                <ProductMockup layout={preset.layout} className="max-w-[120px]" />
+              </div>
+              <div className="space-y-2 p-3">
+                <p className="text-sm font-medium leading-snug">{preset.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="outline" className="gap-1 text-xs"><Sparkles className="h-3 w-3" />Dynamic photo</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2">{preset.description}</p>
+                <p className="text-sm font-semibold tabular-nums">{formatCurrency(preset.amount, "INR")}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="flex items-center gap-2">
+        <span className="h-5 w-1 rounded-full bg-primary" />
+        <h2 className="text-lg font-semibold tracking-tight">Lab products</h2>
+      </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative sm:w-80">

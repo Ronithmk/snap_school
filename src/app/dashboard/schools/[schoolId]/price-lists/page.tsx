@@ -29,7 +29,8 @@ import { usePriceLists, useUpdatePriceList } from "@/hooks/use-pricing";
 import { useSchool } from "@/hooks/use-tenant";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
-import { PRODUCT_MOCKUPS } from "@/config/product-mockups";
+import { ProductMockup } from "@/components/storefront/product-mockup";
+import { PRODUCT_MOCKUPS, PRODUCT_MOCKUP_BY_TYPE } from "@/config/product-mockups";
 import type { ApiError, PriceItemType, PriceList, PriceListItem } from "@/types";
 
 interface Props { params: Promise<{ schoolId: string }> }
@@ -327,12 +328,19 @@ export default function SchoolPriceListsPage({ params }: Props) {
                                 <td className="px-3 py-3"><input type="checkbox" checked={checked} onChange={() => toggleItem(item.id)} className="h-4 w-4 rounded border-border accent-primary" /></td>
                                 <td className="px-2 py-3"><span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[10px] font-bold tabular-nums text-muted-foreground">{n}</span></td>
                                 <td className="px-3 py-3">
-                                  <p className="font-medium leading-snug">{item.name}</p>
-                                  {item.description && <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>}
-                                  {item.previewImageUrl && (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={item.previewImageUrl} alt={item.name} className="mt-1.5 h-9 w-9 rounded border border-border object-cover" />
-                                  )}
+                                  <div className="flex items-start gap-2">
+                                    {item.productType && PRODUCT_MOCKUP_BY_TYPE.has(item.productType) && (
+                                      <ProductMockup layout={PRODUCT_MOCKUP_BY_TYPE.get(item.productType)!.layout} className="w-9 shrink-0" />
+                                    )}
+                                    {!item.productType && item.previewImageUrl && (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={item.previewImageUrl} alt={item.name} className="h-9 w-9 shrink-0 rounded border border-border object-cover" />
+                                    )}
+                                    <div>
+                                      <p className="font-medium leading-snug">{item.name}</p>
+                                      {item.description && <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>}
+                                    </div>
+                                  </div>
                                 </td>
                                 <td className="px-3 py-3"><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_BADGE[type]}`}>{TYPE_LABEL[type]}</span></td>
                                 <td className="px-3 py-3 text-center">

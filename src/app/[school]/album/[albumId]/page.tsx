@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { WatermarkOverlay } from "@/components/storefront/watermark-overlay";
 import { ProductMockup } from "@/components/storefront/product-mockup";
-import { useAlbum } from "@/hooks/use-albums";
+import { useAlbum, useAlbumPhotos } from "@/hooks/use-albums";
 import { useAlbumCart } from "@/hooks/use-cart";
 import { useDefaultPriceListForSchool, usePriceLists } from "@/hooks/use-pricing";
 import { useSchoolBySlug } from "@/hooks/use-tenant";
@@ -34,6 +34,7 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   const { data: priceLists } = usePriceLists(school?.id);
   const { data: defaultPriceList } = useDefaultPriceListForSchool(school?.id);
   const { cart, addItem, removeItem, updateQuantity } = useAlbumCart(school, albumId);
+  const { data: photoPages } = useAlbumPhotos(albumId);
 
   const [accessChecked, setAccessChecked] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState("");
@@ -65,6 +66,11 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   const selectedItem = priceList?.items.find((i) => i.id === selectedItemId) ?? priceList?.items[0] ?? null;
   const currencyCode = priceList?.currencyCode ?? school?.settings.currencyCode ?? "EUR";
 
+  // Photo used to render dynamic product mockups — falls back to the album's first photo
+  // when no cover photo has been set, so each kid's products show their own photo.
+  const firstPhoto = photoPages?.pages[0]?.data[0];
+  const mockupPhotoUrl = album?.coverImageUrl || firstPhoto?.previewUrl || firstPhoto?.thumbnailUrl || "";
+
   function getItemQty(priceListItemId: string): number {
     return cart?.items
       .filter((i) => i.priceListItemId === priceListItemId)
@@ -82,7 +88,7 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
         name: item.name,
         unitPrice: item.amount,
         quantity: newQty,
-        thumbnailUrl: item.previewImageUrl ?? album?.coverImageUrl ?? "",
+        thumbnailUrl: item.previewImageUrl ?? mockupPhotoUrl,
       });
     } else {
       updateQuantity(lines[0].id, newQty);
@@ -146,11 +152,11 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
               >
                 <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
                   {mockup ? (
-                    <ProductMockup layout={mockup.layout} photoUrl={album.coverImageUrl} className="h-full" />
+                    <ProductMockup layout={mockup.layout} photoUrl={mockupPhotoUrl} className="h-full" />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={item.previewImageUrl ?? album.coverImageUrl}
+                      src={item.previewImageUrl || mockupPhotoUrl}
                       alt={item.name}
                       className="h-full w-full object-cover"
                     />
@@ -179,7 +185,7 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
         {selectedItem ? (
           <ProductPreview
             item={selectedItem}
-            coverUrl={album.coverImageUrl}
+            coverUrl={mockupPhotoUrl}
             watermark={school.settings?.watermark}
           />
         ) : null}
