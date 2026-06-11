@@ -86,6 +86,7 @@ function NavLink({
     <Link
       href={href}
       onClick={onNavigate}
+      prefetch={false}
       className={cn(
         "flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-150",
         indent && "ml-3 text-xs",
