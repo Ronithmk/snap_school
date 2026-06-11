@@ -22,13 +22,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       category: existing.category,
       status: "draft",
       previewImageUrl: existing.previewImageUrl,
-      dimensions: existing.dimensions,
+      dimensions: (existing.dimensions ?? {}) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       orientation: existing.orientation,
       price: existing.price,
       currencyCode: existing.currencyCode,
       taxIncluded: existing.taxIncluded,
-      tags: existing.tags,
-      pages: existing.pages,
+      tags: (existing.tags ?? []) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      pages: (existing.pages ?? []) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     },
   });
 
