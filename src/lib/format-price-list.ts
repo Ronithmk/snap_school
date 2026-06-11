@@ -10,6 +10,13 @@ type PrismaPriceListItemRow = {
   category: string | null;
 };
 
+type PrismaBulkDiscountTierRow = {
+  id: string;
+  priceListId: string;
+  minQuantity: number;
+  discountPercent: number;
+};
+
 type PrismaPriceListRow = {
   id: string;
   schoolId: string;
@@ -18,6 +25,7 @@ type PrismaPriceListRow = {
   currencyCode: string;
   isDefault: boolean;
   items?: PrismaPriceListItemRow[];
+  bulkDiscounts?: PrismaBulkDiscountTierRow[];
   updatedAt: Date;
 };
 
@@ -35,6 +43,14 @@ function fmtItem(item: PrismaPriceListItemRow) {
   };
 }
 
+function fmtTier(tier: PrismaBulkDiscountTierRow) {
+  return {
+    id: tier.id,
+    minQuantity: tier.minQuantity,
+    discountPercent: tier.discountPercent,
+  };
+}
+
 export function fmtPriceList(pl: PrismaPriceListRow) {
   return {
     id: pl.id,
@@ -44,6 +60,7 @@ export function fmtPriceList(pl: PrismaPriceListRow) {
     currencyCode: pl.currencyCode,
     isDefault: pl.isDefault,
     items: (pl.items ?? []).map(fmtItem),
+    bulkDiscounts: (pl.bulkDiscounts ?? []).map(fmtTier),
     updatedAt: pl.updatedAt.toISOString(),
   };
 }

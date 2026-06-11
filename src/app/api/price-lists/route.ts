@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!user) return err("Unauthorized.", 401);
 
   const body = await req.json();
-  const { schoolId, name, countryCode, currencyCode, isDefault, items } = body;
+  const { schoolId, name, countryCode, currencyCode, isDefault, items, bulkDiscounts } = body;
 
   if (!schoolId || !name) return err("schoolId and name are required.", 400);
 
@@ -44,8 +44,16 @@ export async function POST(req: NextRequest) {
             })),
           }
         : undefined,
+      bulkDiscounts: bulkDiscounts && bulkDiscounts.length > 0
+        ? {
+            create: bulkDiscounts.map((tier: any) => ({
+              minQuantity: tier.minQuantity,
+              discountPercent: tier.discountPercent,
+            })),
+          }
+        : undefined,
     },
-    include: { items: true },
+    include: { items: true, bulkDiscounts: true },
   });
 
   revalidateTag(CACHE_TAGS.priceLists, { expire: 0 });

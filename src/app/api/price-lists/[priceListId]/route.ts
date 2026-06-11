@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pri
 
   const priceList = await db.priceList.findUnique({
     where: { id: priceListId },
-    include: { items: true },
+    include: { items: true, bulkDiscounts: true },
   });
   if (!priceList) return err("Price list not found.", 404);
 
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
 
   const { priceListId } = await params;
   const body = await req.json();
-  const { name, countryCode, currencyCode, isDefault, items } = body;
+  const { name, countryCode, currencyCode, isDefault, items, bulkDiscounts } = body;
 
   const data: Record<string, any> = {};
   if (name !== undefined) data.name = name;
@@ -47,10 +47,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
     };
   }
 
+  if (bulkDiscounts !== undefined) {
+    await db.bulkDiscountTier.deleteMany({ where: { priceListId } });
+    data.bulkDiscounts = {
+      create: bulkDiscounts.map((tier: any) => ({
+        minQuantity: tier.minQuantity,
+        discountPercent: tier.discountPercent,
+      })),
+    };
+  }
+
   const priceList = await db.priceList.update({
     where: { id: priceListId },
     data,
-    include: { items: true },
+    include: { items: true, bulkDiscounts: true },
   });
 
   revalidateTag(CACHE_TAGS.priceLists, { expire: 0 });

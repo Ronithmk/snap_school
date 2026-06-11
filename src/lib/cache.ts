@@ -74,7 +74,7 @@ export const getCachedPriceLists = unstable_cache(
   async (schoolId: string | null) => {
     const where: Record<string, unknown> = {};
     if (schoolId) where.schoolId = schoolId;
-    const priceLists = await db.priceList.findMany({ where, include: { items: true } });
+    const priceLists = await db.priceList.findMany({ where, include: { items: true, bulkDiscounts: true } });
     return priceLists.map(fmtPriceList);
   },
   ["price-lists"],

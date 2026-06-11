@@ -47,6 +47,7 @@ model School {
   orders        Order[]
   contentBlocks ContentBlock[]
   pricingRules  PricingRule[]
+  labProducts   LabProduct[]
 }
 
 model SchoolClass {
@@ -149,15 +150,16 @@ model PhotoTagAssignment {
 }
 
 model PriceList {
-  id           String          @id @default(cuid())
-  schoolId     String
-  name         String
-  countryCode  String          @default("IN")
-  currencyCode String          @default("INR")
-  isDefault    Boolean         @default(false)
-  updatedAt    DateTime        @updatedAt
-  school       School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  items        PriceListItem[]
+  id            String             @id @default(cuid())
+  schoolId      String
+  name          String
+  countryCode   String             @default("IN")
+  currencyCode  String             @default("INR")
+  isDefault     Boolean            @default(false)
+  updatedAt     DateTime           @updatedAt
+  school        School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  items         PriceListItem[]
+  bulkDiscounts BulkDiscountTier[]
 }
 
 model PriceListItem {
@@ -171,6 +173,35 @@ model PriceListItem {
   unitsIncluded   Int?
   category        String?
   priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+}
+
+model BulkDiscountTier {
+  id              String    @id @default(cuid())
+  priceListId     String
+  minQuantity     Int
+  discountPercent Float
+  priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+}
+
+model LabProduct {
+  id              String   @id @default(cuid())
+  schoolId        String
+  name            String
+  description     String?
+  type            String
+  category        String
+  status          String   @default("draft")
+  previewImageUrl String   @default("")
+  dimensions      String   @default("{}")
+  orientation     String   @default("portrait")
+  price           Float    @default(0)
+  currencyCode    String   @default("INR")
+  taxIncluded     Boolean  @default(false)
+  tags            String   @default("[]")
+  pages           String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 model Order {
