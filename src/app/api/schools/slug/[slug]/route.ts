@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, err } from "@/lib/api-helpers";
+import { formatDbSchool } from "@/lib/format-school";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -13,18 +14,5 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     db.album.count({ where: { schoolId: school.id } }),
   ]);
 
-  return ok({
-    id: school.id,
-    slug: school.slug,
-    name: school.name,
-    logoUrl: school.logoUrl,
-    bannerUrl: school.bannerUrl,
-    description: school.description,
-    status: school.status,
-    settings: school.settings,
-    classCount,
-    albumCount,
-    createdAt: school.createdAt.toISOString(),
-    updatedAt: school.updatedAt.toISOString(),
-  });
+  return ok(formatDbSchool(school, { classCount, albumCount }));
 }

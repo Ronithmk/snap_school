@@ -132,8 +132,56 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* AI-powered features — big, prominent banner */}
+        <section className="relative overflow-hidden border-y border-violet-200/60 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-background dark:border-violet-900/40 dark:from-violet-950/40 dark:via-fuchsia-950/20 dark:to-background">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-32 right-0 h-[28rem] w-[28rem] rounded-full bg-violet-400/20 blur-3xl"
+          />
+          <div className="relative mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-300 bg-violet-100 text-violet-700 shadow-[0_8px_30px_oklch(0.6_0.2_300/25%)] dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                <Bot className="h-8 w-8" />
+              </div>
+              <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-100 px-3.5 py-1.5 text-sm font-semibold text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                <Sparkles className="h-4 w-4" />
+                AI-powered
+              </span>
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                <span className="text-gradient">Smarter photo operations,</span>
+                <br />
+                powered by AI.
+              </h2>
+              <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
+                From capture to checkout, our studio tools do the heavy lifting — so every
+                album sorts, curates, and ships itself.
+              </p>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {AI_FEATURES.map(({ icon: Icon, title, description }, i) => (
+                <div
+                  key={title}
+                  className={cn(
+                    "glass animate-fade-up space-y-4 rounded-3xl border border-violet-200/70 bg-white/60 p-6 shadow-[0_4px_24px_oklch(0_0_0/6%)] backdrop-blur-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_12px_40px_oklch(0.6_0.2_300/15%)] dark:border-violet-900/40 dark:bg-violet-950/20",
+                    i === 0 && "delay-75",
+                    i === 1 && "delay-150",
+                    i === 2 && "delay-225",
+                    i === 3 && "delay-300",
+                  )}
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                    <Icon className="h-7 w-7" />
+                  </span>
+                  <h3 className="text-base font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Features */}
-        <section className="border-y border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
+        <section className="border-b border-border/50 bg-foreground/[0.015] backdrop-blur-sm">
           <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:grid-cols-3 sm:px-6">
             {HIGHLIGHTS.map(({ icon: Icon, title, description }, i) => (
               <div
@@ -149,29 +197,6 @@ export default async function HomePage() {
                   <Icon className="h-5 w-5" />
                 </span>
                 <h2 className="text-sm font-semibold">{title}</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* AI-powered features */}
-        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-          <div className="mb-8 space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
-              <Bot className="h-3.5 w-3.5" />
-              AI-powered
-            </div>
-            <h2 className="text-xl font-semibold tracking-tight">Smarter photo operations</h2>
-            <p className="text-sm text-muted-foreground">From capture to checkout, our studio tools do the heavy lifting.</p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {AI_FEATURES.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="glass space-y-3 rounded-2xl border border-border p-5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-foreground">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="text-sm font-semibold">{title}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
