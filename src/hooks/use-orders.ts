@@ -33,6 +33,28 @@ export function useRequestDownload() {
   });
 }
 
+const DOWNLOAD_EXTENSIONS: Record<DownloadAssetRequest["assetType"], string> = {
+  jpg: "zip",
+  pdf_contact_sheet: "pdf",
+  zip_package: "zip",
+};
+
+const DOWNLOAD_PREFIXES: Record<DownloadAssetRequest["assetType"], string> = {
+  jpg: "photos",
+  pdf_contact_sheet: "invoice",
+  zip_package: "order",
+};
+
+/** Triggers a browser download for the given order asset, naming the file after the order number. */
+export function downloadOrderAsset(blob: Blob, assetType: DownloadAssetRequest["assetType"], orderNumber: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${DOWNLOAD_PREFIXES[assetType]}-${orderNumber}.${DOWNLOAD_EXTENSIONS[assetType]}`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function useExportOrdersCsv() {
   return useMutation({
     mutationFn: (filters: OrderListFilters = {}) => ordersService.exportCsv(filters),

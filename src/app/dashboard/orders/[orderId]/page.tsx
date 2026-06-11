@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrder, useRequestDownload } from "@/hooks/use-orders";
+import { useOrder, useRequestDownload, downloadOrderAsset } from "@/hooks/use-orders";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
@@ -18,7 +18,7 @@ import type { ApiError, DownloadAssetType } from "@/types";
 
 const DOWNLOAD_ASSETS: { type: DownloadAssetType; label: string; icon: typeof FileText }[] = [
   { type: "jpg", label: "Original JPGs", icon: Download },
-  { type: "pdf_contact_sheet", label: "Contact sheet (PDF)", icon: FileText },
+  { type: "pdf_contact_sheet", label: "Invoice (PDF)", icon: FileText },
   { type: "zip_package", label: "Full package (ZIP)", icon: Package },
 ];
 
@@ -33,10 +33,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
   async function handleDownload(assetType: DownloadAssetType) {
     try {
-      const { url } = await requestDownload.mutateAsync({ orderId, assetType });
-      window.open(url, "_blank", "noopener,noreferrer");
+      const blob = await requestDownload.mutateAsync({ orderId, assetType });
+      downloadOrderAsset(blob, assetType, order!.orderNumber);
     } catch (err) {
-      toast.error((err as ApiError).message ?? "Couldn't generate the download link. Please try again.");
+      toast.error((err as ApiError).message ?? "Couldn't generate the download. Please try again.");
     }
   }
 

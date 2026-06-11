@@ -1,0 +1,110 @@
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { formatCurrency } from "@/config/currency";
+import type { Order } from "@/types";
+
+const styles = StyleSheet.create({
+  page: { padding: 32, fontSize: 10, fontFamily: "Helvetica", color: "#1f2937" },
+  title: { fontSize: 20, fontWeight: 700, marginBottom: 4 },
+  subtitle: { fontSize: 11, color: "#6b7280", marginBottom: 16 },
+  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+  sectionLabel: { fontSize: 9, color: "#6b7280", textTransform: "uppercase", marginBottom: 4 },
+  bold: { fontWeight: 700 },
+  table: { marginTop: 12, borderTop: "1px solid #e5e7eb" },
+  tableHeader: { flexDirection: "row", borderBottom: "1px solid #e5e7eb", paddingVertical: 6 },
+  tableRow: { flexDirection: "row", borderBottom: "1px solid #f3f4f6", paddingVertical: 6 },
+  colName: { flex: 3 },
+  colQty: { flex: 1, textAlign: "right" },
+  colPrice: { flex: 1, textAlign: "right" },
+  colTotal: { flex: 1, textAlign: "right" },
+  totals: { marginTop: 12, alignSelf: "flex-end", width: 200 },
+  totalsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  grandTotalRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 6, borderTop: "1px solid #e5e7eb" },
+  footer: { marginTop: 32, fontSize: 9, color: "#9ca3af", textAlign: "center" },
+});
+
+export function InvoiceDocument({ order }: { order: Order }) {
+  const currency = order.totals.currencyCode;
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Invoice</Text>
+        <Text style={styles.subtitle}>{order.orderNumber}</Text>
+
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.sectionLabel}>Billed to</Text>
+            <Text style={styles.bold}>{order.customerName}</Text>
+            <Text>{order.customerEmail}</Text>
+            {order.shippingAddress ? (
+              <>
+                <Text>{order.shippingAddress.line1}</Text>
+                {order.shippingAddress.line2 ? <Text>{order.shippingAddress.line2}</Text> : null}
+                <Text>
+                  {[order.shippingAddress.city, order.shippingAddress.state, order.shippingAddress.postalCode].filter(Boolean).join(", ")}
+                </Text>
+                <Text>{order.shippingAddress.countryCode}</Text>
+              </>
+            ) : null}
+          </View>
+          <View>
+            <Text style={styles.sectionLabel}>From</Text>
+            <Text style={styles.bold}>{order.schoolName}</Text>
+          </View>
+          <View>
+            <Text style={styles.sectionLabel}>Order date</Text>
+            <Text>{new Date(order.placedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Status</Text>
+            <Text>{order.status}</Text>
+          </View>
+        </View>
+
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.colName, styles.bold]}>Item</Text>
+            <Text style={[styles.colQty, styles.bold]}>Qty</Text>
+            <Text style={[styles.colPrice, styles.bold]}>Unit price</Text>
+            <Text style={[styles.colTotal, styles.bold]}>Total</Text>
+          </View>
+          {order.items.map((item) => (
+            <View key={item.id} style={styles.tableRow}>
+              <Text style={styles.colName}>{item.name}</Text>
+              <Text style={styles.colQty}>{item.quantity}</Text>
+              <Text style={styles.colPrice}>{formatCurrency(item.unitPrice, currency)}</Text>
+              <Text style={styles.colTotal}>{formatCurrency(item.unitPrice * item.quantity, currency)}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.totals}>
+          <View style={styles.totalsRow}>
+            <Text>Subtotal</Text>
+            <Text>{formatCurrency(order.totals.subtotal, currency)}</Text>
+          </View>
+          {order.totals.discount > 0 ? (
+            <View style={styles.totalsRow}>
+              <Text>Discount</Text>
+              <Text>-{formatCurrency(order.totals.discount, currency)}</Text>
+            </View>
+          ) : null}
+          <View style={styles.totalsRow}>
+            <Text>Shipping</Text>
+            <Text>{order.totals.shipping > 0 ? formatCurrency(order.totals.shipping, currency) : "Free"}</Text>
+          </View>
+          {order.totals.tax > 0 ? (
+            <View style={styles.totalsRow}>
+              <Text>Tax</Text>
+              <Text>{formatCurrency(order.totals.tax, currency)}</Text>
+            </View>
+          ) : null}
+          <View style={styles.grandTotalRow}>
+            <Text style={styles.bold}>Total</Text>
+            <Text style={styles.bold}>{formatCurrency(order.totals.total, currency)}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.footer}>Generated by SnapSchool · {new Date().toLocaleString()}</Text>
+      </Page>
+    </Document>
+  );
+}

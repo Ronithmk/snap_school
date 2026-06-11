@@ -1,37 +1,10 @@
 import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, parseIntParam, paginate } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
-
-function fmtOrder(o: any) {
-  let items = o.items;
-  let totals = o.totals;
-  try { if (typeof items === "string") items = JSON.parse(items); } catch { items = []; }
-  try { if (typeof totals === "string") totals = JSON.parse(totals); } catch { totals = {}; }
-
-  let shippingAddress = o.shippingAddress;
-  try { if (typeof shippingAddress === "string") shippingAddress = JSON.parse(shippingAddress); } catch { shippingAddress = null; }
-
-  return {
-    id: o.id,
-    orderNumber: o.orderNumber,
-    schoolId: o.schoolId,
-    albumId: o.albumId ?? null,
-    albumTitle: o.albumTitle ?? null,
-    customerName: o.customerName,
-    customerEmail: o.customerEmail,
-    status: o.status,
-    items,
-    totals,
-    shippingMethodId: o.shippingMethodId ?? null,
-    shippingAddress,
-    countryCode: o.countryCode ?? null,
-    placedAt: o.placedAt.toISOString(),
-    updatedAt: o.updatedAt.toISOString(),
-  };
-}
+import { fmtOrder, buildOrdersWhere } from "@/lib/format-order";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req);
@@ -44,28 +17,10 @@ export async function GET(req: NextRequest) {
   const page = parseIntParam(searchParams.get("page"), 1);
   const pageSize = parseIntParam(searchParams.get("pageSize"), 20);
 
-  const where: Record<string, any> = {};
-  if (user.role !== "platform_admin") {
-    const allowedSchoolIds = user.schoolIds ?? [];
-    if (schoolId) {
-      if (!allowedSchoolIds.includes(schoolId)) return err("Unauthorized.", 403);
-      where.schoolId = schoolId;
-    } else {
-      where.schoolId = { in: allowedSchoolIds };
-    }
-  } else if (schoolId) {
-    where.schoolId = schoolId;
-  }
-  if (status) where.status = status;
-  if (search) {
-    where.OR = [
-      { customerName: { contains: search, mode: "insensitive" } },
-      { customerEmail: { contains: search, mode: "insensitive" } },
-      { orderNumber: { contains: search, mode: "insensitive" } },
-    ];
-  }
+  const where = buildOrdersWhere(user, { schoolId, status, search });
+  if ("__unauthorized" in where) return err("Unauthorized.", 403);
 
-  const orders = await db.order.findMany({ where, orderBy: { placedAt: "desc" } });
+  const orders = await db.order.findMany({ where, include: { school: true }, orderBy: { placedAt: "desc" } });
 
   const formatted = orders.map(fmtOrder);
   return ok(paginate(formatted, page, pageSize));
@@ -101,14 +56,14 @@ export async function POST(req: NextRequest) {
       orderNumber,
       schoolId,
       albumId: albumId ?? null,
-      albumTitle: albumTitle ?? null,
+      albumTitle: albumTitle ?? "",
       customerName,
       customerEmail,
       status: status ?? "pending",
-      items: typeof items === "object" ? items : JSON.parse(items ?? "[]"),
-      totals: typeof totals === "object" ? totals : JSON.parse(totals ?? "{}"),
+      items: jsonField(typeof items === "object" ? items : JSON.parse(items ?? "[]")),
+      totals: jsonField(typeof totals === "object" ? totals : JSON.parse(totals ?? "{}")),
       shippingMethodId: shippingMethodId ?? null,
-      shippingAddress: shippingAddress ?? undefined,
+      shippingAddress: shippingAddress != null ? jsonField(shippingAddress) : undefined,
       countryCode: countryCode ?? "IN",
     },
   });

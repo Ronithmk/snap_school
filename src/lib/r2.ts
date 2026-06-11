@@ -1,12 +1,18 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID ?? "";
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID ?? "";
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY ?? "";
+/** Treats unfilled `.env` placeholders like `[CLOUDFLARE_ACCOUNT_ID]` as unset. */
+function envValue(name: string): string {
+  const value = process.env[name] ?? "";
+  return /^\[.*\]$/.test(value) ? "" : value;
+}
 
-const AWS_REGION = process.env.AWS_REGION ?? "";
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID ?? "";
-const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY ?? "";
+const R2_ACCOUNT_ID = envValue("R2_ACCOUNT_ID");
+const R2_ACCESS_KEY_ID = envValue("R2_ACCESS_KEY_ID");
+const R2_SECRET_ACCESS_KEY = envValue("R2_SECRET_ACCESS_KEY");
+
+const AWS_REGION = envValue("AWS_REGION");
+const AWS_ACCESS_KEY_ID = envValue("AWS_ACCESS_KEY_ID");
+const AWS_SECRET_ACCESS_KEY = envValue("AWS_SECRET_ACCESS_KEY");
 
 const USING_R2 = !!R2_ACCOUNT_ID;
 
@@ -34,7 +40,7 @@ export const r2 = new S3Client(
         },
       }
     : {
-        region: AWS_REGION,
+        region: AWS_REGION || "auto",
         credentials: {
           accessKeyId: AWS_ACCESS_KEY_ID,
           secretAccessKey: AWS_SECRET_ACCESS_KEY,

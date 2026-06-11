@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Check, ExternalLink, Globe, ImageIcon, Layers, Loader2, Palette,
   ToggleLeft, ToggleRight,
@@ -16,6 +17,7 @@ import { WatermarkOverlay } from "@/components/storefront/watermark-overlay";
 import { useSchool, useUpdateSchool } from "@/hooks/use-tenant";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
+import type { ApiError } from "@/types";
 import type { WatermarkSettings } from "@/types/tenant";
 
 interface Props { params: Promise<{ schoolId: string }> }
@@ -93,32 +95,36 @@ export default function BrandingPage({ params }: Props) {
   const handleSave = async () => {
     if (!school) return;
     const effectiveColor = customColor || primaryColor;
-    await updateSchool.mutateAsync({
-      id: school.id,
-      input: {
-        logoUrl,
-        bannerUrl,
-        settings: {
-          ...school.settings,
-          primaryColor: effectiveColor,
-          footerText: footerText || undefined,
-          showPoweredBy,
-          customDomain: customDomain || undefined,
-          whatsappNumber: whatsappNumber || undefined,
-          instagramUrl: instagramUrl || undefined,
-          facebookUrl: facebookUrl || undefined,
-          watermark: {
-            enabled: wmEnabled,
-            lines: wmLines.slice(0, wmLineCount).filter(Boolean),
-            opacity: wmOpacity,
-            pattern: wmPattern,
-            color: wmColor,
+    try {
+      await updateSchool.mutateAsync({
+        id: school.id,
+        input: {
+          logoUrl,
+          bannerUrl,
+          settings: {
+            ...school.settings,
+            primaryColor: effectiveColor,
+            footerText: footerText || undefined,
+            showPoweredBy,
+            customDomain: customDomain || undefined,
+            whatsappNumber: whatsappNumber || undefined,
+            instagramUrl: instagramUrl || undefined,
+            facebookUrl: facebookUrl || undefined,
+            watermark: {
+              enabled: wmEnabled,
+              lines: wmLines.slice(0, wmLineCount).filter(Boolean),
+              opacity: wmOpacity,
+              pattern: wmPattern,
+              color: wmColor,
+            },
           },
         },
-      },
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      toast.error((e as ApiError).message ?? "Couldn't save branding. Please try again.");
+    }
   };
 
   // Computed watermark for live preview

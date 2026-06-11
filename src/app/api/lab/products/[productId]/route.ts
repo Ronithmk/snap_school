@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { fmtLabProduct } from "@/lib/format-lab-product";
@@ -29,15 +29,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
   if (description !== undefined) data.description = description;
   if (type !== undefined) data.type = type;
   if (category !== undefined) data.category = category;
-  if (dimensions !== undefined) data.dimensions = JSON.stringify(dimensions);
+  if (dimensions !== undefined) data.dimensions = jsonField(dimensions);
   if (orientation !== undefined) data.orientation = orientation;
   if (price !== undefined) data.price = price;
   if (currencyCode !== undefined) data.currencyCode = currencyCode;
   if (taxIncluded !== undefined) data.taxIncluded = taxIncluded;
-  if (tags !== undefined) data.tags = JSON.stringify(tags);
+  if (tags !== undefined) data.tags = jsonField(tags);
   if (status !== undefined) data.status = status;
   if (previewImageUrl !== undefined) data.previewImageUrl = previewImageUrl;
-  if (pages !== undefined) data.pages = JSON.stringify(pages);
+  if (pages !== undefined) data.pages = jsonField(pages);
 
   const product = await db.labProduct.update({ where: { id: productId }, data });
 

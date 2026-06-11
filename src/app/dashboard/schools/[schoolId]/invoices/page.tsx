@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Download, FileText, Loader2, Search } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
@@ -10,11 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useOrders, useExportOrdersCsv } from "@/hooks/use-orders";
+import { useOrders, useExportOrdersCsv, useRequestDownload, downloadOrderAsset } from "@/hooks/use-orders";
 import { useSchool } from "@/hooks/use-tenant";
 import { ORDER_STATUS_TONE } from "@/config/constants";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
+import type { ApiError } from "@/types";
 
 interface Props { params: Promise<{ schoolId: string }> }
 
@@ -27,9 +29,19 @@ export default function SchoolInvoicesPage({ params }: Props) {
   // Invoices = paid or completed orders
   const { data, isLoading } = useOrders({ schoolId, status: "paid", search: search || undefined, page });
   const exportCsv = useExportOrdersCsv();
+  const requestDownload = useRequestDownload();
 
   // Merge paid + completed as invoices (show paid page for simplicity)
   const invoices = data?.data ?? [];
+
+  async function handleDownloadInvoice(orderId: string, orderNumber: string) {
+    try {
+      const blob = await requestDownload.mutateAsync({ orderId, assetType: "pdf_contact_sheet" });
+      downloadOrderAsset(blob, "pdf_contact_sheet", orderNumber);
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't generate the invoice. Please try again.");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -94,7 +106,19 @@ export default function SchoolInvoicesPage({ params }: Props) {
                     {new Date(order.placedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={routes.dashboard.order(order.id)} className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">View</Link>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 gap-1 text-xs"
+                        disabled={requestDownload.isPending}
+                        onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
+                      >
+                        {requestDownload.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                        Invoice
+                      </Button>
+                      <Link href={routes.dashboard.order(order.id)} className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">View</Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

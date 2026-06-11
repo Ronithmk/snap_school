@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, paginate, parseIntParam } from "@/lib/api-helpers";
 import { formatDbSchool } from "@/lib/format-school";
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (exists) return err("A school with this slug already exists.", 409, "slug_taken");
 
   const school = await db.school.create({
-    data: { name, slug, logoUrl, bannerUrl, description, settings: JSON.stringify(settings ?? {}) },
+    data: { name, slug, logoUrl, bannerUrl, description, settings: jsonField(settings ?? {}) },
   });
 
   if (auth.role === "school_admin") {

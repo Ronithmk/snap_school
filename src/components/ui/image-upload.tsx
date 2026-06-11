@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
 import { FileImage, FileText, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 export type AssetType = "image" | "pdf" | "any";
@@ -48,23 +49,25 @@ export function ImageUpload({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setError(null);
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       setError(`File must be under ${MAX_SIZE_MB} MB`);
       return;
     }
     setIsProcessing(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      onChange(e.target?.result as string);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { data } = await apiClient.post<{ url: string }>("/uploads", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      onChange(data.url);
+    } catch {
+      setError("Upload failed. Please try again.");
+    } finally {
       setIsProcessing(false);
-    };
-    reader.onerror = () => {
-      setError("Could not read file");
-      setIsProcessing(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {

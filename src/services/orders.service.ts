@@ -70,12 +70,12 @@ export const ordersService = {
     return data;
   },
 
-  /** Returns a download URL for the requested asset. Mock returns a stable placeholder link. */
-  async requestDownload({ orderId, assetType }: DownloadAssetRequest): Promise<{ url: string }> {
+  /** Downloads the requested asset as a blob (mock returns an empty placeholder). */
+  async requestDownload({ orderId, assetType }: DownloadAssetRequest): Promise<Blob> {
     if (env.useMockApi) {
-      return mockDelay({ url: `/mock-downloads/${orderId}/${assetType}` });
+      return mockDelay(new Blob([`Mock ${assetType} for order ${orderId}`], { type: "text/plain" }));
     }
-    const { data } = await apiClient.post<{ url: string }>(ENDPOINTS.download(orderId), { assetType });
+    const { data } = await apiClient.post<Blob>(ENDPOINTS.download(orderId), { assetType }, { responseType: "blob" });
     return data;
   },
 

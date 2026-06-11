@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { getRazorpay } from "@/lib/razorpay-client";
@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
       customerName,
       customerEmail,
       status: "pending_payment",
-      items: typeof items === "string" ? items : JSON.stringify(items),
-      totals: typeof totals === "string" ? totals : JSON.stringify(totals),
-      shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : undefined,
+      items: jsonField(typeof items === "string" ? JSON.parse(items) : items),
+      totals: jsonField(typeof totals === "string" ? JSON.parse(totals) : totals),
+      shippingAddress: shippingAddress ? jsonField(typeof shippingAddress === "string" ? JSON.parse(shippingAddress) : shippingAddress) : undefined,
       countryCode: countryCode ?? "IN",
     },
   });

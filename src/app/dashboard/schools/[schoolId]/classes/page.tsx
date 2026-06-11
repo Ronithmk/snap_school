@@ -3,7 +3,8 @@
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BrainCircuit, ChevronRight, FolderOpen, GraduationCap, ImageIcon, Plus, Tag, Upload, Users } from "lucide-react";
+import { toast } from "sonner";
+import { BrainCircuit, ChevronRight, FolderOpen, GraduationCap, ImageIcon, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +15,10 @@ import { useSchool } from "@/hooks/use-tenant";
 import { useSchoolClasses } from "@/hooks/use-albums";
 import { useSchoolAlbums } from "@/hooks/use-albums";
 import { usePriceLists } from "@/hooks/use-pricing";
-import { useUpdateClass } from "@/hooks/use-albums";
+import { useUpdateClass, useDeleteClass } from "@/hooks/use-albums";
 import { CURRENCIES } from "@/config/currency";
 import { routes } from "@/config/routes";
-import type { PriceList, SchoolClass } from "@/types";
+import type { ApiError, PriceList, SchoolClass } from "@/types";
 
 interface Props { params: Promise<{ schoolId: string }> }
 
@@ -66,9 +67,21 @@ export default function SchoolClassesPage({ params }: Props) {
   const { data: albumsPage } = useSchoolAlbums(schoolId, {});
   const { data: priceLists } = usePriceLists(schoolId);
   const updateClass = useUpdateClass(schoolId);
+  const deleteClass = useDeleteClass(schoolId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<SchoolClass | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteClass.mutateAsync(id);
+      toast.success("Class deleted.");
+      setConfirmingId(null);
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't delete the class. Please try again.");
+    }
+  }
 
   // Compute total photo count per class from albums
   const classPhotoMap = useMemo(() => {
@@ -227,6 +240,38 @@ export default function SchoolClassesPage({ params }: Props) {
                           <Tag className="h-3.5 w-3.5" />
                           Tag
                         </Button>
+                        {confirmingId === cls.id ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-7 gap-1 text-xs"
+                              disabled={deleteClass.isPending}
+                              onClick={() => handleDelete(cls.id)}
+                            >
+                              Confirm
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 gap-1 text-xs"
+                              disabled={deleteClass.isPending}
+                              onClick={() => setConfirmingId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            title="Delete class"
+                            onClick={() => setConfirmingId(cls.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

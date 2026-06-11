@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, paginate, parseIntParam } from "@/lib/api-helpers";
 import { fmtLabProduct } from "@/lib/format-lab-product";
@@ -63,13 +63,13 @@ export async function POST(req: NextRequest) {
       category: category ?? "",
       status: "draft",
       previewImageUrl: "",
-      dimensions: JSON.stringify(dimensions ?? { label: "", widthCm: 0, heightCm: 0 }),
+      dimensions: jsonField(dimensions ?? { label: "", widthCm: 0, heightCm: 0 }),
       orientation: orientation ?? "portrait",
       price: price ?? 0,
       currencyCode: currencyCode ?? "INR",
       taxIncluded: taxIncluded ?? false,
-      tags: JSON.stringify(tags ?? []),
-      pages: JSON.stringify([
+      tags: jsonField(tags ?? []),
+      pages: jsonField([
         {
           id: "pg_1",
           name: "Page 1",

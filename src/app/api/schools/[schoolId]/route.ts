@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
+import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { formatDbSchool } from "@/lib/format-school";
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sc
   if (logoUrl !== undefined) data.logoUrl = logoUrl;
   if (bannerUrl !== undefined) data.bannerUrl = bannerUrl;
   if (description !== undefined) data.description = description;
-  if (settings !== undefined) data.settings = typeof settings === "string" ? settings : JSON.stringify(settings);
+  if (settings !== undefined) data.settings = jsonField(typeof settings === "string" ? JSON.parse(settings) : settings);
   if (status !== undefined) data.status = status;
 
   const school = await db.school.update({ where: { id: schoolId }, data });

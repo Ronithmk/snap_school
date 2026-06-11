@@ -2,35 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, parseIntParam, paginate } from "@/lib/api-helpers";
-
-function fmtOrder(o: any) {
-  let items = o.items;
-  let totals = o.totals;
-  try { if (typeof items === "string") items = JSON.parse(items); } catch { items = []; }
-  try { if (typeof totals === "string") totals = JSON.parse(totals); } catch { totals = {}; }
-
-  let shippingAddress = o.shippingAddress;
-  try { if (typeof shippingAddress === "string") shippingAddress = JSON.parse(shippingAddress); } catch { shippingAddress = null; }
-
-  return {
-    id: o.id,
-    orderNumber: o.orderNumber,
-    schoolId: o.schoolId,
-    schoolName: o.school?.name ?? "",
-    albumId: o.albumId ?? null,
-    albumTitle: o.albumTitle ?? "",
-    customerName: o.customerName,
-    customerEmail: o.customerEmail,
-    status: o.status,
-    items,
-    totals,
-    shippingMethodId: o.shippingMethodId ?? null,
-    shippingAddress,
-    countryCode: o.countryCode ?? null,
-    placedAt: o.placedAt.toISOString(),
-    updatedAt: o.updatedAt.toISOString(),
-  };
-}
+import { fmtOrder } from "@/lib/format-order";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req);
