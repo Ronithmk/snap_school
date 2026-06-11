@@ -1,4 +1,4 @@
-import type { School, SchoolStatus } from "@/types/tenant";
+import type { School, SchoolSettings, SchoolStatus } from "@/types/tenant";
 
 type PrismaSchoolRow = {
   id: string;
@@ -13,14 +13,25 @@ type PrismaSchoolRow = {
   updatedAt: Date;
 };
 
+const DEFAULT_SCHOOL_SETTINGS: SchoolSettings = {
+  countryCode: "US",
+  currencyCode: "USD",
+  tax: { enabled: true, rate: 0, label: "Sales Tax", inclusive: false },
+};
+
 export function formatDbSchool(
   s: PrismaSchoolRow,
   counts: { classCount?: number; albumCount?: number } = {},
 ): School {
-  const settings =
+  const raw =
     typeof s.settings === "string"
       ? JSON.parse(s.settings)
       : (s.settings ?? {});
+  const settings: SchoolSettings = {
+    ...DEFAULT_SCHOOL_SETTINGS,
+    ...raw,
+    tax: { ...DEFAULT_SCHOOL_SETTINGS.tax, ...(raw.tax ?? {}) },
+  };
   return {
     id: s.id,
     slug: s.slug,

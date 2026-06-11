@@ -2,26 +2,14 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import { formatDbSchool } from "@/lib/format-school";
 
-async function fmtSchool(school: any) {
+async function fmtSchool(school: Parameters<typeof formatDbSchool>[0]) {
   const [classCount, albumCount] = await Promise.all([
     db.schoolClass.count({ where: { schoolId: school.id } }),
     db.album.count({ where: { schoolId: school.id } }),
   ]);
-  return {
-    id: school.id,
-    slug: school.slug,
-    name: school.name,
-    logoUrl: school.logoUrl,
-    bannerUrl: school.bannerUrl,
-    description: school.description,
-    status: school.status,
-    settings: school.settings,
-    classCount,
-    albumCount,
-    createdAt: school.createdAt.toISOString(),
-    updatedAt: school.updatedAt.toISOString(),
-  };
+  return formatDbSchool(school, { classCount, albumCount });
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ schoolId: string }> }) {

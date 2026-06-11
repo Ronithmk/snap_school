@@ -2,17 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, paginate, parseIntParam } from "@/lib/api-helpers";
-
-function formatSchool(s: Awaited<ReturnType<typeof db.school.findFirst>>) {
-  if (!s) return null;
-  const settings = typeof s.settings === "string" ? JSON.parse(s.settings) : (s.settings ?? {});
-  return {
-    id: s.id, slug: s.slug, name: s.name, logoUrl: s.logoUrl, bannerUrl: s.bannerUrl,
-    description: s.description, status: s.status, settings,
-    classCount: 0, albumCount: 0,
-    createdAt: s.createdAt.toISOString(), updatedAt: s.updatedAt.toISOString(),
-  };
-}
+import { formatDbSchool } from "@/lib/format-school";
 
 export async function GET(req: NextRequest) {
   const auth = await getAuthUser(req);
@@ -38,11 +28,9 @@ export async function GET(req: NextRequest) {
   const classMap = Object.fromEntries(classes.map((c) => [c.schoolId, c._count]));
   const albumMap = Object.fromEntries(albums.map((a) => [a.schoolId, a._count]));
 
-  const formatted = schools.map((s) => ({
-    ...formatSchool(s)!,
-    classCount: classMap[s.id] ?? 0,
-    albumCount: albumMap[s.id] ?? 0,
-  }));
+  const formatted = schools.map((s) =>
+    formatDbSchool(s, { classCount: classMap[s.id] ?? 0, albumCount: albumMap[s.id] ?? 0 }),
+  );
 
   return ok(paginate(formatted, page, pageSize));
 }
@@ -66,5 +54,5 @@ export async function POST(req: NextRequest) {
     await db.schoolAdmin.create({ data: { userId: auth.id, schoolId: school.id } });
   }
 
-  return ok({ ...formatSchool(school)!, classCount: 0, albumCount: 0 }, 201);
+  return ok(formatDbSchool(school), 201);
 }
