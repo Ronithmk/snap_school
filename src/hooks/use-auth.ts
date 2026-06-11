@@ -11,6 +11,7 @@ const SESSION_QUERY_KEY = ["session"] as const;
 export function useSession() {
   const session = useAuthStore((s) => s.session);
   const setSession = useAuthStore((s) => s.setSession);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
   const query = useQuery({
     queryKey: [...SESSION_QUERY_KEY, session?.token],
@@ -22,14 +23,16 @@ export function useSession() {
     },
     initialData: session ?? undefined,
     staleTime: Infinity,
-    enabled: !!session?.token,
+    enabled: hasHydrated && !!session?.token,
   });
 
   return {
     session: query.data ?? null,
     user: query.data?.user ?? null,
     isAuthenticated: !!query.data,
-    isLoading: query.isLoading,
+    // Until the persisted session is restored from localStorage, treat auth as "loading"
+    // so route guards don't redirect to login on a hard page reload (e.g. window.location).
+    isLoading: !hasHydrated || query.isLoading,
   };
 }
 

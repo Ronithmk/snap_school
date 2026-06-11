@@ -2,6 +2,7 @@
 
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BrainCircuit, ChevronRight, FolderOpen, GraduationCap, ImageIcon, Plus, Tag, Upload, Users } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
@@ -59,6 +60,7 @@ function PriceListBadge({
 
 export default function SchoolClassesPage({ params }: Props) {
   const { schoolId } = use(params);
+  const router = useRouter();
   const { data: school } = useSchool(schoolId);
   const { data: classes, isLoading } = useSchoolClasses(schoolId);
   const { data: albumsPage } = useSchoolAlbums(schoolId, {});
@@ -211,7 +213,7 @@ export default function SchoolClassesPage({ params }: Props) {
                           size="sm"
                           variant="outline"
                           className="h-7 gap-1 text-xs"
-                          onClick={() => window.location.assign(routes.dashboard.class(schoolId, cls.id))}
+                          onClick={() => router.push(routes.dashboard.class(schoolId, cls.id))}
                         >
                           <Upload className="h-3.5 w-3.5" />
                           Upload photos
@@ -220,7 +222,7 @@ export default function SchoolClassesPage({ params }: Props) {
                           size="sm"
                           variant="outline"
                           className="h-7 gap-1 text-xs"
-                          onClick={() => window.location.assign(routes.dashboard.class(schoolId, cls.id))}
+                          onClick={() => router.push(routes.dashboard.class(schoolId, cls.id))}
                         >
                           <Tag className="h-3.5 w-3.5" />
                           Tag

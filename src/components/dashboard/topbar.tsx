@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { LogOut, Menu } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { DashboardNav } from "./sidebar";
 import { useLogout, useSession } from "@/hooks/use-auth";
+import { useSchool } from "@/hooks/use-tenant";
 import { ROLE_LABELS } from "@/config/constants";
 import { routes } from "@/config/routes";
 
@@ -18,6 +19,8 @@ export function DashboardTopbar({ title }: { title?: string }) {
   const { user } = useSession();
   const logout = useLogout();
   const router = useRouter();
+  const params = useParams<{ schoolId?: string }>();
+  const { data: school } = useSchool(params?.schoolId);
 
   function handleSignOut() {
     logout();
@@ -30,7 +33,7 @@ export function DashboardTopbar({ title }: { title?: string }) {
         <Menu className="h-5 w-5" />
       </Button>
 
-      <h1 className="truncate text-base font-semibold">{title}</h1>
+      <h1 className="truncate text-base font-semibold">{school?.name ?? title}</h1>
 
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
