@@ -6,8 +6,8 @@ import { ok, err } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
   try {
-  const { name, email, schoolName } = await req.json();
-  if (!name || !email) return err("Name and email are required.", 400);
+  const { name, email, password, schoolName } = await req.json();
+  if (!name || !email || !password) return err("Name, email, and password are required.", 400);
 
   const exists = await db.user.findUnique({ where: { email: email.toLowerCase() } });
   if (exists) return err("An account with this email already exists.", 409, "email_taken");
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     data: {
       name,
       email: email.toLowerCase(),
-      password: bcrypt.hashSync(crypto.randomUUID(), 10),
+      password: bcrypt.hashSync(password, 10),
       role: "school_admin",
     },
   });

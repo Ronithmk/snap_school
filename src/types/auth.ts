@@ -21,7 +21,7 @@ export interface Session {
 
 export interface LoginCredentials {
   email: string;
-  password?: string;
+  password: string;
 }
 
 /** Separate credential shape for the platform-admin-only sign-in. */
@@ -37,7 +37,7 @@ export interface LoginResult {
 export interface RegisterInput {
   name: string;
   email: string;
-  password?: string;
+  password: string;
   schoolName: string;
 }
 

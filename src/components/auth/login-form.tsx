@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +17,12 @@ import type { ApiError } from "@/types";
 
 const schema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const DEMO_ACCOUNTS = [{ label: "School Admin", email: "school@snapschool.app" }];
+const DEMO_ACCOUNTS = [{ label: "School Admin", email: "school@snapschool.app", password: "demo1234" }];
 
 export function LoginForm() {
   const { t } = useTranslation();
@@ -29,19 +30,21 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const login = useLogin();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormValues>({ defaultValues: { email: "" } });
+  } = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
 
   async function loginAsDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
     setValue("email", account.email, { shouldValidate: true });
+    setValue("password", account.password, { shouldValidate: true });
     setServerError(null);
     try {
-      await login.mutateAsync({ email: account.email });
+      await login.mutateAsync({ email: account.email, password: account.password });
       toast.success("Welcome back!");
       router.push(searchParams.get("from") ?? routes.dashboard.root());
     } catch (err) {
@@ -70,6 +73,34 @@ export function LoginForm() {
         <Label htmlFor="email">{t("auth.email")}</Label>
         <Input id="email" type="email" autoComplete="email" placeholder="you@school.edu" {...register("email")} />
         {errors.email ? <p className="text-sm text-destructive">{errors.email.message}</p> : null}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">{t("auth.password")}</Label>
+          <Link href={routes.forgotPassword()} className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="pr-10"
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.password ? <p className="text-sm text-destructive">{errors.password.message}</p> : null}
       </div>
 
       {serverError ? (
