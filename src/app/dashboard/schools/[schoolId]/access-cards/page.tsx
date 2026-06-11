@@ -188,9 +188,13 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
     return `${origin}${routes.storefront.parent(school.slug, student.id)}`;
   }
 
-  function buildGalleryUrl() {
-    if (!activeAlbum || !school) return origin;
-    return `${origin}${routes.storefront.album(school.slug, activeAlbum.id)}`;
+  function buildGalleryUrl(student: Student) {
+    if (!school) return origin;
+    // Prefer the student's own album (1 album = 1 kid = 1 access card, fully isolated from other kids).
+    const ownAlbum = albums?.data.find((a) => a.studentId === student.id);
+    const album = ownAlbum ?? activeAlbum;
+    if (!album) return origin;
+    return `${origin}${routes.storefront.album(school.slug, album.id)}`;
   }
 
   const classMap = new Map((classes ?? []).map((c) => [c.id, c]));
@@ -403,7 +407,7 @@ export default function AccessCardsPage({ params }: AccessCardsPageProps) {
             student={student}
             school={school}
             schoolClass={classMap.get(student.classId)}
-            galleryUrl={buildGalleryUrl()}
+            galleryUrl={buildGalleryUrl(student)}
             cartUrl={buildCartUrl(student)}
             orderClosingDate={orderClosingDate}
           />

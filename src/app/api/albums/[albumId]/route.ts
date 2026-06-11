@@ -17,7 +17,7 @@ function fmtAlbum(a: any) {
     visibility: a.visibility,
     passwordProtected: !!a.passwordHash,
     shareUrl: a.shareUrl,
-    pricing: { priceListId: a.priceListId ?? null, currencyCode: "" },
+    pricing: { priceListId: a.priceListId ?? a.class?.priceListId ?? null, currencyCode: "" },
     photoCount: a.photoCount,
     flaggedCount: a.flaggedCount,
     eventDate: a.eventDate?.toISOString() ?? undefined,
@@ -29,7 +29,7 @@ function fmtAlbum(a: any) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = await params;
 
-  const album = await db.album.findUnique({ where: { id: albumId } });
+  const album = await db.album.findUnique({ where: { id: albumId }, include: { class: true } });
   if (!album) return err("Album not found.", 404);
 
   return ok(fmtAlbum(album));

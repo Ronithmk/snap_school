@@ -29,7 +29,7 @@ function fmtAlbum(a: any) {
     visibility: a.visibility,
     passwordProtected: !!a.passwordHash,
     shareUrl: a.shareUrl,
-    pricing: { priceListId: a.priceListId ?? null, currencyCode: "" },
+    pricing: { priceListId: a.priceListId ?? a.class?.priceListId ?? null, currencyCode: "" },
     photoCount: a.photoCount,
     flaggedCount: a.flaggedCount,
     eventDate: a.eventDate?.toISOString() ?? undefined,
@@ -90,7 +90,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ stu
   const student = await db.student.findUnique({ where: { id: studentId } });
   if (!student) return err("Student not found.", 404);
 
-  const album = await db.album.findFirst({ where: { studentId } });
+  const album = await db.album.findFirst({ where: { studentId }, include: { class: true } });
 
   let photos: any[] = [];
   let priceList: any = null;
@@ -102,9 +102,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ stu
       orderBy: { createdAt: "asc" },
     });
 
-    if (album.priceListId) {
+    const effectivePriceListId = album.priceListId ?? album.class?.priceListId ?? null;
+    if (effectivePriceListId) {
       priceList = await db.priceList.findUnique({
-        where: { id: album.priceListId },
+        where: { id: effectivePriceListId },
         include: { items: true },
       });
     }
