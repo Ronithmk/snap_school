@@ -11,6 +11,9 @@ import type { ApiError, Photo } from "@/types";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+/** Files are uploaded in chunks of this size to avoid request size/timeout limits on large bulk uploads. */
+const BATCH_SIZE = 6;
+
 interface UploadResult {
   photos: Photo[];
   flaggedCount: number;
@@ -24,6 +27,7 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [lastResult, setLastResult] = useState<UploadResult | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadPhotos(albumId);
 
@@ -41,20 +45,34 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
 
   async function handleUpload() {
     if (files.length === 0) return;
+    const batches: File[][] = [];
+    for (let i = 0; i < files.length; i += BATCH_SIZE) batches.push(files.slice(i, i + BATCH_SIZE));
+
+    const combined: UploadResult = { photos: [], flaggedCount: 0 };
+    setProgress({ done: 0, total: files.length });
+
     try {
-      const result = await upload.mutateAsync({ albumId, files });
-      setLastResult(result);
+      for (const batch of batches) {
+        const result = await upload.mutateAsync({ albumId, files: batch });
+        combined.photos.push(...result.photos);
+        combined.flaggedCount += result.flaggedCount;
+        setProgress((prev) => (prev ? { done: prev.done + batch.length, total: prev.total } : null));
+      }
+      setLastResult(combined);
       setFiles([]);
       if (inputRef.current) inputRef.current.value = "";
-      if (result.flaggedCount > 0) {
+      if (combined.flaggedCount > 0) {
         toast.warning(
-          `${result.photos.length} photo${result.photos.length === 1 ? "" : "s"} uploaded — ${result.flaggedCount} flagged for review.`,
+          `${combined.photos.length} photo${combined.photos.length === 1 ? "" : "s"} uploaded — ${combined.flaggedCount} flagged for review.`,
         );
       } else {
-        toast.success(`Uploaded ${result.photos.length} photo${result.photos.length === 1 ? "" : "s"}.`);
+        toast.success(`Uploaded ${combined.photos.length} photo${combined.photos.length === 1 ? "" : "s"}.`);
       }
     } catch (err) {
+      if (combined.photos.length > 0) setLastResult(combined);
       toast.error((err as ApiError).message ?? "Upload failed. Please try again.");
+    } finally {
+      setProgress(null);
     }
   }
 
@@ -84,7 +102,7 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
           <UploadCloud className="h-5 w-5" />
         </span>
         <p className="text-sm font-medium">Drag and drop photos here, or click to browse</p>
-        <p className="text-xs text-muted-foreground">JPG, PNG, or WEBP — multiple files supported</p>
+        <p className="text-xs text-muted-foreground">JPG, PNG, or WEBP — select hundreds at once for bulk upload</p>
         <input
           ref={inputRef}
           type="file"
@@ -101,11 +119,22 @@ export function PhotoUploadDropzone({ albumId }: PhotoUploadDropzoneProps) {
             <p className="text-sm font-medium">
               {files.length} photo{files.length === 1 ? "" : "s"} ready to upload
             </p>
-            <Button size="sm" onClick={handleUpload} disabled={upload.isPending}>
-              {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            <Button size="sm" onClick={handleUpload} disabled={!!progress}>
+              {progress ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
               Upload {files.length} photo{files.length === 1 ? "" : "s"}
             </Button>
           </div>
+          {progress ? (
+            <div className="space-y-1.5">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Uploading {progress.done} of {progress.total}…</p>
+            </div>
+          ) : null}
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
             {files.map((file, index) => (
               <li key={`${file.name}-${index}`} className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs">

@@ -4,13 +4,13 @@ import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BrainCircuit, ChevronRight, FolderOpen, GraduationCap, ImageIcon, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
+import { BrainCircuit, ChevronRight, FolderOpen, GraduationCap, ImageIcon, Layers, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClassFormSheet } from "@/components/dashboard";
+import { ClassFormSheet, BulkClassSheet } from "@/components/dashboard";
 import { useSchool } from "@/hooks/use-tenant";
 import { useSchoolClasses } from "@/hooks/use-albums";
 import { useSchoolAlbums } from "@/hooks/use-albums";
@@ -70,6 +70,7 @@ export default function SchoolClassesPage({ params }: Props) {
   const deleteClass = useDeleteClass(schoolId);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<SchoolClass | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -125,10 +126,16 @@ export default function SchoolClassesPage({ params }: Props) {
         title="Classes"
         description="Assign a price list to each class and upload student photos."
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Add class
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <Layers className="h-4 w-4" />
+              Bulk add
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add class
+            </Button>
+          </div>
         }
       />
 
@@ -283,6 +290,7 @@ export default function SchoolClassesPage({ params }: Props) {
       )}
 
       <ClassFormSheet open={createOpen} onOpenChange={setCreateOpen} schoolId={schoolId} />
+      <BulkClassSheet open={bulkOpen} onOpenChange={setBulkOpen} schoolId={schoolId} existingClasses={classes ?? []} />
       {editTarget ? (
         <ClassFormSheet
           open={!!editTarget}

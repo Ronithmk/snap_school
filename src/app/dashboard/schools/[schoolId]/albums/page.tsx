@@ -2,14 +2,14 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Images, Plus } from "lucide-react";
+import { ChevronRight, Images, Layers, Plus } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlbumFormSheet } from "@/components/dashboard";
+import { AlbumFormSheet, BulkAlbumSheet } from "@/components/dashboard";
 import { useSchool } from "@/hooks/use-tenant";
 import { useSchoolAlbums, useSchoolClasses } from "@/hooks/use-albums";
 import { ALBUM_VISIBILITY_LABELS, ALBUM_VISIBILITY_TONE } from "@/config/constants";
@@ -24,6 +24,7 @@ export default function SchoolAlbumsPage({ params }: Props) {
   const { data: albums, isLoading } = useSchoolAlbums(schoolId);
   const { data: classes } = useSchoolClasses(schoolId);
   const [createOpen, setCreateOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -41,10 +42,16 @@ export default function SchoolAlbumsPage({ params }: Props) {
         title="Albums"
         description="Photo albums and galleries for this school."
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            New album
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <Layers className="h-4 w-4" />
+              Bulk add
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              New album
+            </Button>
+          </div>
         }
       />
 
@@ -93,6 +100,7 @@ export default function SchoolAlbumsPage({ params }: Props) {
       )}
 
       <AlbumFormSheet open={createOpen} onOpenChange={setCreateOpen} schoolId={schoolId} classes={classes ?? []} />
+      <BulkAlbumSheet open={bulkOpen} onOpenChange={setBulkOpen} schoolId={schoolId} classes={classes ?? []} existingAlbums={albums?.data ?? []} />
     </div>
   );
 }
