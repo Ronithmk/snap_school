@@ -1,6 +1,8 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { useState } from "react";
+import { DatabaseZap, LogOut, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
@@ -11,9 +13,74 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useLogout, useSession } from "@/hooks/use-auth";
+import { useCacheNamespaces, useClearCache } from "@/hooks/use-cache";
 import { useUiStore } from "@/stores/ui.store";
 import { ROLE_LABELS } from "@/config/constants";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, isSupportedLocale } from "@/config/i18n";
+
+function CacheCard() {
+  const { data: namespaces, isLoading } = useCacheNamespaces();
+  const clearCache = useClearCache();
+  const [pending, setPending] = useState<string | null>(null);
+
+  function handleClear(tag?: string, label?: string) {
+    setPending(tag ?? "all");
+    clearCache.mutate(tag, {
+      onSuccess: () => toast.success(label ? `${label} cache cleared.` : "All caches cleared."),
+      onError: () => toast.error("Failed to clear cache."),
+      onSettled: () => setPending(null),
+    });
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <DatabaseZap className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Cache</h2>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleClear(undefined, "All")}
+            disabled={clearCache.isPending}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear all cache
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          SnapSchool caches expensive dashboard and storefront data for a short time to reduce
+          database load. If changes aren&apos;t showing up, clear the relevant cache below.
+        </p>
+        <Separator />
+        {isLoading ? (
+          <p className="text-xs text-muted-foreground">Loading cache namespaces…</p>
+        ) : (
+          <div className="space-y-2">
+            {(namespaces ?? []).map((ns) => (
+              <div key={ns.tag} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{ns.label}</p>
+                  <p className="text-xs text-muted-foreground">{ns.description}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleClear(ns.tag, ns.label)}
+                  disabled={clearCache.isPending}
+                >
+                  {clearCache.isPending && pending === ns.tag ? "Clearing…" : "Empty"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DashboardSettingsPage() {
   const { user } = useSession();
@@ -94,6 +161,8 @@ export default function DashboardSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {user?.role === "platform_admin" ? <CacheCard /> : null}
     </div>
   );
 }

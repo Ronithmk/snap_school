@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, parseIntParam, paginate } from "@/lib/api-helpers";
+import { CACHE_TAGS } from "@/lib/cache";
 
 function fmtOrder(o: any) {
   let items = o.items;
@@ -110,6 +112,8 @@ export async function POST(req: NextRequest) {
       countryCode: countryCode ?? "IN",
     },
   });
+
+  revalidateTag(CACHE_TAGS.analytics, { expire: 0 });
 
   return ok(fmtOrder(order), 201);
 }

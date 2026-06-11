@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, paginate, parseIntParam } from "@/lib/api-helpers";
 import { formatDbSchool } from "@/lib/format-school";
+import { CACHE_TAGS, getCachedSchools } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   const auth = await getAuthUser(req);
@@ -13,24 +15,15 @@ export async function GET(req: NextRequest) {
   const page = parseIntParam(searchParams.get("page"), 1);
   const pageSize = parseIntParam(searchParams.get("pageSize"), 20);
 
-  let schools = await db.school.findMany({ orderBy: { name: "asc" } });
+  let formatted = await getCachedSchools();
 
   if (auth.role !== "platform_admin" && auth.schoolIds?.length) {
-    schools = schools.filter((s) => auth.schoolIds!.includes(s.id));
+    formatted = formatted.filter((s) => auth.schoolIds!.includes(s.id));
   }
   if (search) {
     const q = search.toLowerCase();
-    schools = schools.filter((s) => s.name.toLowerCase().includes(q) || s.slug.includes(q));
+    formatted = formatted.filter((s) => s.name.toLowerCase().includes(q) || s.slug.includes(q));
   }
-
-  const classes = await db.schoolClass.groupBy({ by: ["schoolId"], _count: true });
-  const albums = await db.album.groupBy({ by: ["schoolId"], _count: true });
-  const classMap = Object.fromEntries(classes.map((c) => [c.schoolId, c._count]));
-  const albumMap = Object.fromEntries(albums.map((a) => [a.schoolId, a._count]));
-
-  const formatted = schools.map((s) =>
-    formatDbSchool(s, { classCount: classMap[s.id] ?? 0, albumCount: albumMap[s.id] ?? 0 }),
-  );
 
   return ok(paginate(formatted, page, pageSize));
 }
@@ -53,6 +46,8 @@ export async function POST(req: NextRequest) {
   if (auth.role === "school_admin") {
     await db.schoolAdmin.create({ data: { userId: auth.id, schoolId: school.id } });
   }
+
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
 
   return ok(formatDbSchool(school), 201);
 }

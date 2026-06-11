@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { formatDbSchool } from "@/lib/format-school";
+import { CACHE_TAGS } from "@/lib/cache";
 
 async function fmtSchool(school: Parameters<typeof formatDbSchool>[0]) {
   const [classCount, albumCount] = await Promise.all([
@@ -44,6 +46,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sc
 
   const school = await db.school.update({ where: { id: schoolId }, data });
 
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
+  revalidateTag(CACHE_TAGS.storefront, { expire: 0 });
+
   return ok(await fmtSchool(school));
 }
 
@@ -54,6 +59,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
   const { schoolId } = await params;
 
   await db.school.delete({ where: { id: schoolId } });
+
+  revalidateTag(CACHE_TAGS.schools, { expire: 0 });
+  revalidateTag(CACHE_TAGS.storefront, { expire: 0 });
 
   return new Response(null, { status: 204 });
 }

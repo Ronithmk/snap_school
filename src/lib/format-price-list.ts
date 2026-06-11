@@ -1,0 +1,49 @@
+type PrismaPriceListItemRow = {
+  id: string;
+  priceListId: string;
+  type: string;
+  name: string;
+  amount: number;
+  description: string | null;
+  previewImageUrl: string | null;
+  unitsIncluded: number | null;
+  category: string | null;
+};
+
+type PrismaPriceListRow = {
+  id: string;
+  schoolId: string;
+  name: string;
+  countryCode: string;
+  currencyCode: string;
+  isDefault: boolean;
+  items?: PrismaPriceListItemRow[];
+  updatedAt: Date;
+};
+
+function fmtItem(item: PrismaPriceListItemRow) {
+  return {
+    id: item.id,
+    priceListId: item.priceListId,
+    type: item.type,
+    name: item.name,
+    amount: item.amount,
+    description: item.description ?? null,
+    previewImageUrl: item.previewImageUrl ?? null,
+    unitsIncluded: item.unitsIncluded ?? null,
+    category: item.category ?? null,
+  };
+}
+
+export function fmtPriceList(pl: PrismaPriceListRow) {
+  return {
+    id: pl.id,
+    schoolId: pl.schoolId,
+    name: pl.name,
+    countryCode: pl.countryCode,
+    currencyCode: pl.currencyCode,
+    isDefault: pl.isDefault,
+    items: (pl.items ?? []).map(fmtItem),
+    updatedAt: pl.updatedAt.toISOString(),
+  };
+}

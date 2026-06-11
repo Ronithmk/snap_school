@@ -11,3 +11,4 @@ export * from "./student";
 export * from "./content";
 export * from "./parent";
 export * from "./support";
+export * from "./cache";

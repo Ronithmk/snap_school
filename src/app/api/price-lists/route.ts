@@ -1,48 +1,18 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
-
-function fmtItem(item: any) {
-  return {
-    id: item.id,
-    priceListId: item.priceListId,
-    type: item.type,
-    name: item.name,
-    amount: item.amount,
-    description: item.description ?? null,
-    previewImageUrl: item.previewImageUrl ?? null,
-    unitsIncluded: item.unitsIncluded ?? null,
-    category: item.category ?? null,
-  };
-}
-
-function fmtPriceList(pl: any) {
-  return {
-    id: pl.id,
-    schoolId: pl.schoolId,
-    name: pl.name,
-    countryCode: pl.countryCode,
-    currencyCode: pl.currencyCode,
-    isDefault: pl.isDefault,
-    items: (pl.items ?? []).map(fmtItem),
-    updatedAt: pl.updatedAt.toISOString(),
-  };
-}
+import { fmtPriceList } from "@/lib/format-price-list";
+import { CACHE_TAGS, getCachedPriceLists } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const schoolId = searchParams.get("schoolId");
 
-  const where: Record<string, any> = {};
-  if (schoolId) where.schoolId = schoolId;
+  const priceLists = await getCachedPriceLists(schoolId);
 
-  const priceLists = await db.priceList.findMany({
-    where,
-    include: { items: true },
-  });
-
-  return ok(priceLists.map(fmtPriceList));
+  return ok(priceLists);
 }
 
 export async function POST(req: NextRequest) {
@@ -77,6 +47,8 @@ export async function POST(req: NextRequest) {
     },
     include: { items: true },
   });
+
+  revalidateTag(CACHE_TAGS.priceLists, { expire: 0 });
 
   return ok(fmtPriceList(priceList), 201);
 }

@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
+import { ACTIVE_STATUSES, getCachedAnalyticsData } from "@/lib/cache";
 import { COUNTRIES } from "@/config/currency";
 
-const ACTIVE_STATUSES = ["pending_payment", "cancelled", "refunded"];
+type CachedOrder = Awaited<ReturnType<typeof getCachedAnalyticsData>>["orders"][number];
 
 function parseTotals(totals: unknown): { total: number; currencyCode: string } {
   try {
@@ -35,12 +35,12 @@ function parseAddress(address: unknown) {
   }
 }
 
-function fmtOrder(o: any) {
+function fmtOrder(o: CachedOrder) {
   return {
     id: o.id,
     orderNumber: o.orderNumber,
     schoolId: o.schoolId,
-    schoolName: o.school?.name ?? "",
+    schoolName: o.schoolName ?? "",
     albumId: o.albumId ?? null,
     albumTitle: o.albumTitle ?? "",
     customerName: o.customerName,
@@ -57,8 +57,8 @@ function fmtOrder(o: any) {
     shippingMethodId: o.shippingMethodId ?? null,
     shippingAddress: parseAddress(o.shippingAddress),
     countryCode: o.countryCode ?? null,
-    placedAt: o.placedAt.toISOString(),
-    updatedAt: o.updatedAt.toISOString(),
+    placedAt: o.placedAt,
+    updatedAt: o.updatedAt,
   };
 }
 
@@ -73,13 +73,10 @@ export async function GET(req: NextRequest) {
     return ok(emptyOverview());
   }
 
-  const schoolWhere = isPlatformAdmin ? {} : { schoolId: { in: schoolIds } };
+  const { orders: allOrders, albums: allAlbums } = await getCachedAnalyticsData();
 
-  const orders = await db.order.findMany({
-    where: schoolWhere,
-    include: { school: true },
-    orderBy: { placedAt: "desc" },
-  });
+  const orders = isPlatformAdmin ? allOrders : allOrders.filter((o) => schoolIds.includes(o.schoolId));
+  const albums = isPlatformAdmin ? allAlbums : allAlbums.filter((a) => schoolIds.includes(a.schoolId));
 
   const completedOrders = orders.filter((o) => !ACTIVE_STATUSES.includes(o.status));
   const totalRevenue = completedOrders.reduce((sum, o) => sum + parseTotals(o.totals).total, 0);
@@ -93,7 +90,7 @@ export async function GET(req: NextRequest) {
   const revenueSeries = Array.from({ length: 14 }, (_, i) => {
     const date = new Date(startOfDay(now).getTime() - (13 - i) * dayMs);
     const dateStr = date.toISOString().slice(0, 10);
-    const dayOrders = completedOrders.filter((o) => o.placedAt.toISOString().slice(0, 10) === dateStr);
+    const dayOrders = completedOrders.filter((o) => o.placedAt.slice(0, 10) === dateStr);
     return {
       date: dateStr,
       revenue: dayOrders.reduce((sum, o) => sum + parseTotals(o.totals).total, 0),
@@ -103,8 +100,8 @@ export async function GET(req: NextRequest) {
 
   const cutoff14 = new Date(now.getTime() - 14 * dayMs);
   const cutoff28 = new Date(now.getTime() - 28 * dayMs);
-  const last14 = completedOrders.filter((o) => o.placedAt >= cutoff14);
-  const prev14 = completedOrders.filter((o) => o.placedAt >= cutoff28 && o.placedAt < cutoff14);
+  const last14 = completedOrders.filter((o) => new Date(o.placedAt) >= cutoff14);
+  const prev14 = completedOrders.filter((o) => new Date(o.placedAt) >= cutoff28 && new Date(o.placedAt) < cutoff14);
   const last14Revenue = last14.reduce((sum, o) => sum + parseTotals(o.totals).total, 0);
   const prev14Revenue = prev14.reduce((sum, o) => sum + parseTotals(o.totals).total, 0);
   const revenueChangePercent = prev14Revenue > 0 ? ((last14Revenue - prev14Revenue) / prev14Revenue) * 100 : 0;
@@ -122,18 +119,13 @@ export async function GET(req: NextRequest) {
     .filter((c) => c.orders > 0)
     .sort((a, b) => b.revenue - a.revenue);
 
-  const albums = await db.album.findMany({
-    where: schoolWhere,
-    include: { school: true },
-  });
-
   const popularAlbums = albums
     .map((album) => {
       const albumOrders = orders.filter((o) => o.albumId === album.id);
       return {
         albumId: album.id,
         albumTitle: album.title,
-        schoolName: album.school?.name ?? "",
+        schoolName: album.schoolName,
         views: 0,
         orders: albumOrders.length,
         revenue: albumOrders.reduce((sum, o) => sum + parseTotals(o.totals).total, 0),

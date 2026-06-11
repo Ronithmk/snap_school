@@ -1,34 +1,10 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
-
-function fmtItem(item: any) {
-  return {
-    id: item.id,
-    priceListId: item.priceListId,
-    type: item.type,
-    name: item.name,
-    amount: item.amount,
-    description: item.description ?? null,
-    previewImageUrl: item.previewImageUrl ?? null,
-    unitsIncluded: item.unitsIncluded ?? null,
-    category: item.category ?? null,
-  };
-}
-
-function fmtPriceList(pl: any) {
-  return {
-    id: pl.id,
-    schoolId: pl.schoolId,
-    name: pl.name,
-    countryCode: pl.countryCode,
-    currencyCode: pl.currencyCode,
-    isDefault: pl.isDefault,
-    items: (pl.items ?? []).map(fmtItem),
-    updatedAt: pl.updatedAt.toISOString(),
-  };
-}
+import { fmtPriceList } from "@/lib/format-price-list";
+import { CACHE_TAGS } from "@/lib/cache";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ priceListId: string }> }) {
   const { priceListId } = await params;
@@ -77,6 +53,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
     include: { items: true },
   });
 
+  revalidateTag(CACHE_TAGS.priceLists, { expire: 0 });
+
   return ok(fmtPriceList(priceList));
 }
 
@@ -87,6 +65,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
   const { priceListId } = await params;
 
   await db.priceList.delete({ where: { id: priceListId } });
+
+  revalidateTag(CACHE_TAGS.priceLists, { expire: 0 });
 
   return new Response(null, { status: 204 });
 }
