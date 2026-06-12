@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, Loader2, Package, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Ban, ChevronLeft, ChevronRight, Download, Loader2, Package, Search } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useExportOrdersCsv, useOrders } from "@/hooks/use-orders";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
+import { useCancelOrder, useExportOrdersCsv, useOrders } from "@/hooks/use-orders";
+import { CANCELLABLE_ORDER_STATUSES, ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
-import type { OrderStatus } from "@/types";
+import type { ApiError, OrderStatus } from "@/types";
 
 const ALL_STATUSES = "__all__";
 
@@ -30,6 +31,17 @@ export default function DashboardOrdersPage() {
     page,
   });
   const exportCsv = useExportOrdersCsv();
+  const cancelOrder = useCancelOrder();
+
+  async function handleCancel(orderId: string) {
+    if (!window.confirm("Cancel this order? This can't be undone.")) return;
+    try {
+      await cancelOrder.mutateAsync(orderId);
+      toast.success("Order cancelled.");
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't cancel the order. Please try again.");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -99,11 +111,12 @@ export default function DashboardOrdersPage() {
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Placed</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.data.map((order) => (
-                <TableRow key={order.id} className="cursor-pointer" data-testid="order-row" data-order-status={order.status}>
+                <TableRow key={order.id} data-testid="order-row" data-order-status={order.status}>
                   <TableCell>
                     <Link href={routes.dashboard.order(order.id)} className="font-medium text-sm hover:underline" data-testid="order-link">
                       {order.orderNumber}
@@ -125,6 +138,20 @@ export default function DashboardOrdersPage() {
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
                     {new Date(order.placedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {CANCELLABLE_ORDER_STATUSES.includes(order.status) ? (
+                      <Button
+                        data-testid="cancel-order-button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCancel(order.id)}
+                        disabled={cancelOrder.isPending}
+                      >
+                        {cancelOrder.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                        Cancel
+                      </Button>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}
