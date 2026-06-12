@@ -1,12 +1,18 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY ?? "");
+let client: Resend | null = null;
+
+/** Lazily constructs the Resend client so importing this module doesn't throw when RESEND_API_KEY is unset. */
+function getResend(): Resend {
+  if (!client) client = new Resend(process.env.RESEND_API_KEY);
+  return client;
+}
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? "SnapSchool <noreply@snapschool.app>";
 
 export async function sendWelcomeEmail(to: string, name: string) {
   if (!process.env.RESEND_API_KEY) return;
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: "Welcome to SnapSchool!",
@@ -21,7 +27,7 @@ export async function sendOrderConfirmationEmail(
   total: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `Order Confirmed – ${orderNumber}`,
@@ -32,7 +38,7 @@ export async function sendOrderConfirmationEmail(
 /** Sends a marketing campaign email to a batch of recipients. Returns false (no-op) if Resend isn't configured. */
 export async function sendCampaignEmail(to: string[], subject: string, html: string): Promise<boolean> {
   if (!process.env.RESEND_API_KEY || to.length === 0) return false;
-  await Promise.all(to.map((recipient) => resend.emails.send({ from: FROM, to: recipient, subject, html })));
+  await Promise.all(to.map((recipient) => getResend().emails.send({ from: FROM, to: recipient, subject, html })));
   return true;
 }
 
@@ -44,7 +50,7 @@ export async function sendAccessCodeEmail(
   schoolName: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `${studentName}'s School Photo Access Code`,
