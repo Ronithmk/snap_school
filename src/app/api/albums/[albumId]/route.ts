@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
 
@@ -43,6 +44,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ al
   if (!user) return err("Unauthorized.", 401);
 
   const { albumId } = await params;
+
+  const existing = await db.album.findUnique({ where: { id: albumId } });
+  if (!existing) return err("Album not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
+
   const body = await req.json();
   const {
     title,
@@ -84,6 +90,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ a
   if (!user) return err("Unauthorized.", 401);
 
   const { albumId } = await params;
+
+  const existing = await db.album.findUnique({ where: { id: albumId } });
+  if (!existing) return err("Album not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
 
   await db.photo.deleteMany({ where: { albumId } });
   await db.album.delete({ where: { id: albumId } });

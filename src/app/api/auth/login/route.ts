@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = String(email).toLowerCase();
 
-    // Demo account short-circuit — works without a database connection
-    const demo = DEMO_ACCOUNTS[normalizedEmail];
+    // Demo account short-circuit — works without a database connection. Opt-in only.
+    const demo = process.env.ENABLE_DEMO_LOGIN === "true" ? DEMO_ACCOUNTS[normalizedEmail] : undefined;
     if (demo && String(password) === "demo1234") {
       const token = await signToken({ id: demo.id, role: demo.role, schoolIds: demo.schoolIds });
       return ok({

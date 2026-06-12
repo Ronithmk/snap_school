@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { err } from "@/lib/api-helpers";
 import { fmtOrder } from "@/lib/format-order";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
 
   const order = await db.order.findUnique({ where: { id: orderId }, include: { school: true } });
   if (!order) return err("Order not found.", 404);
+  if (!canManageSchool(user, order.schoolId)) return err("Unauthorized.", 403);
 
   const formatted = fmtOrder(order);
 

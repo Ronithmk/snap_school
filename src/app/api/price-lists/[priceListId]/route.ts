@@ -2,11 +2,15 @@ import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { fmtPriceList } from "@/lib/format-price-list";
 import { CACHE_TAGS } from "@/lib/cache";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ priceListId: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ priceListId: string }> }) {
+  const user = await getAuthUser(req);
+  if (!user) return err("Unauthorized.", 401);
+
   const { priceListId } = await params;
 
   const priceList = await db.priceList.findUnique({
@@ -14,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pri
     include: { items: true, bulkDiscounts: true },
   });
   if (!priceList) return err("Price list not found.", 404);
+  if (!canManageSchool(user, priceList.schoolId)) return err("Unauthorized.", 403);
 
   return ok(fmtPriceList(priceList));
 }
@@ -23,6 +28,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
   if (!user) return err("Unauthorized.", 401);
 
   const { priceListId } = await params;
+
+  const existing = await db.priceList.findUnique({ where: { id: priceListId } });
+  if (!existing) return err("Price list not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
+
   const body = await req.json();
   const { name, countryCode, currencyCode, isDefault, items, bulkDiscounts } = body;
 
@@ -74,6 +84,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
   if (!user) return err("Unauthorized.", 401);
 
   const { priceListId } = await params;
+
+  const existing = await db.priceList.findUnique({ where: { id: priceListId } });
+  if (!existing) return err("Price list not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
 
   await db.priceList.delete({ where: { id: priceListId } });
 

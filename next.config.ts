@@ -5,8 +5,6 @@ type RemotePattern = NonNullable<NonNullable<NextConfig["images"]>["remotePatter
 
 const remotePatterns: RemotePattern[] = [
   { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
-  { protocol: "https", hostname: "**.cloudflare.com" },
-  { protocol: "https", hostname: "**.amazonaws.com" },
 ];
 
 // Pick up the bucket's public CDN/custom domain from env so uploaded photos
@@ -23,9 +21,38 @@ if (publicAssetUrl && !/^\[.*\]$/.test(publicAssetUrl)) {
   }
 }
 
+// Scope the S3 image source to the configured bucket/region instead of all of *.amazonaws.com.
+const awsRegion = process.env.AWS_REGION;
+const s3Bucket = process.env.S3_BUCKET_NAME;
+if (awsRegion && s3Bucket && !/^\[.*\]$/.test(awsRegion) && !/^\[.*\]$/.test(s3Bucket)) {
+  remotePatterns.push({ protocol: "https", hostname: `${s3Bucket}.s3.${awsRegion}.amazonaws.com` });
+}
+
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "img-src 'self' https: data:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.posthog.com",
+      "style-src 'self' 'unsafe-inline'",
+      "connect-src 'self' https://*.razorpay.com https://*.posthog.com https://*.sentry.io https://*.ingest.sentry.io",
+      "frame-src 'self' https://*.razorpay.com",
+    ].join("; "),
+  },
+];
+
 const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp"],
   images: { remotePatterns },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

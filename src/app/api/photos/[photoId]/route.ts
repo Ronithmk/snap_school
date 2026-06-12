@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 
 function fmtPhoto(p: any) {
@@ -41,8 +42,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ph
   const body = await req.json();
   const { category } = body;
 
-  const photo = await db.photo.findUnique({ where: { id: photoId } });
+  const photo = await db.photo.findUnique({ where: { id: photoId }, include: { album: true } });
   if (!photo) return err("Photo not found.", 404);
+  if (!canManageSchool(user, photo.album.schoolId)) return err("Unauthorized.", 403);
 
   const updated = await db.photo.update({
     where: { id: photoId },

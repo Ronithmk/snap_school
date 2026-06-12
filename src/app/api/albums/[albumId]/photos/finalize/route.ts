@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { processImage } from "@/lib/image";
 import { fmtPhoto } from "@/lib/format-photo";
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ alb
   const { albumId } = await params;
   const album = await db.album.findUnique({ where: { id: albumId } });
   if (!album) return err("Album not found.", 404);
+  if (!canManageSchool(user, album.schoolId)) return err("Unauthorized.", 403);
 
   const body = await req.json().catch(() => null);
   const uploads = body?.uploads as FinalizeUpload[] | undefined;

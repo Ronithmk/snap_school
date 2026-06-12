@@ -9,6 +9,13 @@ export async function POST(req: NextRequest) {
   const { name, email, password, schoolName } = await req.json();
   if (!name || !email || !password) return err("Name, email, and password are required.", 400);
 
+  if (typeof password !== "string" || password.length < 8) {
+    return err("Password must be at least 8 characters.", 400);
+  }
+  if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return err("Invalid email address.", 400);
+  }
+
   const exists = await db.user.findUnique({ where: { email: email.toLowerCase() } });
   if (exists) return err("An account with this email already exists.", 409, "email_taken");
 

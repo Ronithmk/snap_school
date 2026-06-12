@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 
 function fmtStudent(s: any) {
@@ -17,11 +18,15 @@ function fmtStudent(s: any) {
   };
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
+  const user = await getAuthUser(req);
+  if (!user) return err("Unauthorized.", 401);
+
   const { studentId } = await params;
 
   const student = await db.student.findUnique({ where: { id: studentId } });
   if (!student) return err("Student not found.", 404);
+  if (!canManageSchool(user, student.schoolId)) return err("Unauthorized.", 403);
 
   return ok(fmtStudent(student));
 }
@@ -31,6 +36,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ st
   if (!user) return err("Unauthorized.", 401);
 
   const { studentId } = await params;
+
+  const existing = await db.student.findUnique({ where: { id: studentId } });
+  if (!existing) return err("Student not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
+
   const body = await req.json();
   const { name, number, coverPhotoUrl, classId } = body;
 
@@ -50,6 +60,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
   if (!user) return err("Unauthorized.", 401);
 
   const { studentId } = await params;
+
+  const existing = await db.student.findUnique({ where: { id: studentId } });
+  if (!existing) return err("Student not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
 
   await db.student.delete({ where: { id: studentId } });
 

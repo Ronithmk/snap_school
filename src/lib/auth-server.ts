@@ -1,7 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
 import { NextRequest } from "next/server";
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? "dev-secret-change-in-production");
+const JWT_SECRET_VALUE = process.env.JWT_SECRET;
+if (!JWT_SECRET_VALUE) {
+  throw new Error("JWT_SECRET environment variable is required.");
+}
+const SECRET = new TextEncoder().encode(JWT_SECRET_VALUE);
 const EXPIRES_IN = "8h";
 
 export async function signToken(payload: Record<string, unknown>): Promise<string> {

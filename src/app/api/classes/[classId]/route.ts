@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
 
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ clas
 
   const cls = await db.schoolClass.findUnique({ where: { id: classId } });
   if (!cls) return err("Class not found.", 404);
+  if (!canManageSchool(user, cls.schoolId)) return err("Unauthorized.", 403);
 
   const albumCount = await db.album.count({ where: { classId, isStaging: false } });
   const staging = await db.album.findFirst({ where: { classId, isStaging: true } });
@@ -40,6 +42,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ cl
   if (!user) return err("Unauthorized.", 401);
 
   const { classId } = await params;
+
+  const existing = await db.schoolClass.findUnique({ where: { id: classId } });
+  if (!existing) return err("Class not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
+
   const body = await req.json();
   const { name, slug, grouping, studentCount, priceListId } = body;
 
@@ -63,6 +70,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
   if (!user) return err("Unauthorized.", 401);
 
   const { classId } = await params;
+
+  const existing = await db.schoolClass.findUnique({ where: { id: classId } });
+  if (!existing) return err("Class not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
 
   await db.schoolClass.delete({ where: { id: classId } });
 

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { db, jsonField } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { formatDbSchool } from "@/lib/format-school";
 import { CACHE_TAGS } from "@/lib/cache";
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
   if (!user) return err("Unauthorized.", 401);
 
   const { schoolId } = await params;
+  if (!canManageSchool(user, schoolId)) return err("Unauthorized.", 403);
 
   const school = await db.school.findUnique({ where: { id: schoolId } });
   if (!school) return err("School not found.", 404);
@@ -31,6 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sc
   if (!user) return err("Unauthorized.", 401);
 
   const { schoolId } = await params;
+  if (!canManageSchool(user, schoolId)) return err("Unauthorized.", 403);
 
   const body = await req.json();
   const { name, slug, logoUrl, bannerUrl, description, settings, status } = body;
@@ -54,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sc
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ schoolId: string }> }) {
   const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
+  if (!user || user.role !== "platform_admin") return err("Unauthorized.", 403);
 
   const { schoolId } = await params;
 

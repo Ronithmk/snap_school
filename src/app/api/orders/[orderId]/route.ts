@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
 import { fmtOrder } from "@/lib/format-order";
@@ -15,6 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ orde
 
   const order = await db.order.findUnique({ where: { id: orderId }, include: { school: true } });
   if (!order) return err("Order not found.", 404);
+  if (!canManageSchool(user, order.schoolId)) return err("Unauthorized.", 403);
 
   return ok(fmtOrder(order));
 }

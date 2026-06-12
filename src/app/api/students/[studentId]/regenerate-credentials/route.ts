@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
+import { canManageSchool } from "@/lib/authz";
 import { ok, err } from "@/lib/api-helpers";
 
 function generateUsername(): string {
@@ -35,6 +36,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ stu
   if (!user) return err("Unauthorized.", 401);
 
   const { studentId } = await params;
+
+  const existing = await db.student.findUnique({ where: { id: studentId } });
+  if (!existing) return err("Student not found.", 404);
+  if (!canManageSchool(user, existing.schoolId)) return err("Unauthorized.", 403);
 
   const student = await db.student.update({
     where: { id: studentId },

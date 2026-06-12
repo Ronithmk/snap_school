@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthUser(req);
-  if (!auth) return err("Unauthorized.", 401);
+  if (!auth || (auth.role !== "platform_admin" && auth.role !== "school_admin")) {
+    return err("Unauthorized.", 403);
+  }
 
   const body = await req.json();
   const { name, slug, logoUrl, bannerUrl, description, settings } = body;
