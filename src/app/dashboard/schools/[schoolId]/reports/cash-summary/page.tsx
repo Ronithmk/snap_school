@@ -25,7 +25,7 @@ export default function SchoolCashSummaryPage({ params }: Props) {
     const orders = ordersPage.data;
     const currency = orders[0]?.totals.currencyCode ?? "USD";
 
-    const completed = orders.filter((o) => ["completed", "paid", "shipped", "ready_for_download"].includes(o.status));
+    const completed = orders.filter((o) => ["completed", "paid", "cod", "shipped", "ready_for_download"].includes(o.status));
     const cancelled = orders.filter((o) => ["cancelled", "refunded"].includes(o.status));
 
     const subtotal = completed.reduce((s, o) => s + o.totals.subtotal, 0);

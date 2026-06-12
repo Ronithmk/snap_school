@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useOrders, useExportOrdersCsv, useRequestDownload, downloadOrderAsset } from "@/hooks/use-orders";
 import { useSchool } from "@/hooks/use-tenant";
-import { ORDER_STATUS_TONE } from "@/config/constants";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/types";
@@ -26,12 +26,11 @@ export default function SchoolInvoicesPage({ params }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  // Invoices = paid or completed orders
-  const { data, isLoading } = useOrders({ schoolId, status: "paid", search: search || undefined, page });
+  // Invoices = paid or COD orders that are confirmed and ready to fulfill
+  const { data, isLoading } = useOrders({ schoolId, status: "paid,cod", search: search || undefined, page });
   const exportCsv = useExportOrdersCsv();
   const requestDownload = useRequestDownload();
 
-  // Merge paid + completed as invoices (show paid page for simplicity)
   const invoices = data?.data ?? [];
 
   async function handleDownloadInvoice(orderId: string, orderNumber: string) {
@@ -57,7 +56,7 @@ export default function SchoolInvoicesPage({ params }: Props) {
         title="Invoices"
         description="Paid orders issued as invoices for this school."
         actions={
-          <Button variant="outline" onClick={() => exportCsv.mutate({ schoolId, status: "paid" })} disabled={exportCsv.isPending}>
+          <Button variant="outline" onClick={() => exportCsv.mutate({ schoolId, status: "paid,cod" })} disabled={exportCsv.isPending}>
             {exportCsv.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Export CSV
           </Button>
@@ -72,7 +71,7 @@ export default function SchoolInvoicesPage({ params }: Props) {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : invoices.length === 0 ? (
-        <EmptyState icon={FileText} title="No invoices yet" description="Invoices appear here once orders are marked as paid." />
+        <EmptyState icon={FileText} title="No invoices yet" description="Invoices appear here once a customer pays online or places a cash-on-delivery order." />
       ) : (
         <>
           <Table>
@@ -99,7 +98,7 @@ export default function SchoolInvoicesPage({ params }: Props) {
                   </TableCell>
                   <TableCell className="max-w-[140px] truncate text-sm text-muted-foreground">{order.albumTitle}</TableCell>
                   <TableCell>
-                    <Badge variant={ORDER_STATUS_TONE[order.status]} className="text-xs">Paid</Badge>
+                    <Badge variant={ORDER_STATUS_TONE[order.status]} className="text-xs">{ORDER_STATUS_LABELS[order.status]}</Badge>
                   </TableCell>
                   <TableCell className="text-right text-sm font-semibold tabular-nums">{formatCurrency(order.totals.total, order.totals.currencyCode)}</TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">

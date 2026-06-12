@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
 
   const statuses = statusFilter
     ? statusFilter.split(",")
-    : ["paid", "processing", "completed", "shipped"];
+    : ["paid", "cod", "processing", "completed", "shipped"];
 
   const orders = await db.order.findMany({
     where: { schoolId, status: { in: statuses } },
@@ -101,11 +101,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
 
   // Stats
   const allOrders = await db.order.findMany({
-    where: { schoolId, status: { in: ["paid", "processing", "completed", "shipped"] } },
+    where: { schoolId, status: { in: ["paid", "cod", "processing", "completed", "shipped"] } },
     select: { status: true },
   });
   const stats = {
-    pending: allOrders.filter((o) => o.status === "paid").length,
+    pending: allOrders.filter((o) => ["paid", "cod"].includes(o.status)).length,
     printing: allOrders.filter((o) => o.status === "processing").length,
     completed: allOrders.filter((o) => ["completed", "shipped"].includes(o.status)).length,
   };

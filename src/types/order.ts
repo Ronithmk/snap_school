@@ -3,6 +3,7 @@ import type { CartLineItem, ShippingMethodId } from "./cart";
 
 export type OrderStatus =
   | "pending_payment"
+  | "cod"
   | "paid"
   | "processing"
   | "ready_for_download"
@@ -10,6 +11,8 @@ export type OrderStatus =
   | "completed"
   | "cancelled"
   | "refunded";
+
+export type PaymentMethod = "cod" | "razorpay";
 
 export interface ShippingAddress {
   fullName: string;
@@ -41,6 +44,7 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   status: OrderStatus;
+  paymentMethod: PaymentMethod;
   items: CartLineItem[];
   totals: OrderTotals;
   shippingMethodId: ShippingMethodId | null;
@@ -62,10 +66,29 @@ export interface CreateOrderInput {
   customerName: string;
   customerEmail: string;
   countryCode: string;
+  paymentMethod: PaymentMethod;
+}
+
+export interface CreateRazorpayOrderResult {
+  orderId: ID;
+  orderNumber: string;
+  razorpayOrderId: string | null;
+  razorpayKeyId: string | null;
+  amount: number;
+  currency: string;
+  customerName: string;
+  customerEmail: string;
+}
+
+export interface VerifyPaymentInput {
+  orderId: ID;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
 }
 
 export interface OrderListFilters {
-  status?: OrderStatus;
+  status?: string;
   schoolId?: ID;
   search?: string;
 }

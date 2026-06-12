@@ -26,6 +26,7 @@ import type { PrintJob } from "@/hooks/use-print-queue";
 
 const STATUS_META: Record<string, { label: string; variant: "warning" | "default" | "positive" | "secondary" | "neutral" }> = {
   paid:        { label: "Ready to Print", variant: "warning" },
+  cod:         { label: "Ready to Print (COD)", variant: "warning" },
   processing:  { label: "Printing",       variant: "default" },
   completed:   { label: "Completed",      variant: "positive" },
   shipped:     { label: "Shipped",        variant: "positive" },
@@ -205,7 +206,7 @@ export default function PrintQueuePage({ params }: { params: Promise<{ schoolId:
     active: false, pct: 0, label: "",
   });
 
-  const apiStatus = statusFilter === "pending" ? "paid" : statusFilter === "all" ? undefined : statusFilter;
+  const apiStatus = statusFilter === "pending" ? "paid,cod" : statusFilter === "all" ? undefined : statusFilter;
 
   const { data, isLoading, error } = usePrintQueue(schoolId, {
     status: apiStatus,

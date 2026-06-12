@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { ok, err } from "@/lib/api-helpers";
+import { CACHE_TAGS } from "@/lib/cache";
+import { fmtOrder } from "@/lib/format-order";
 
 export async function POST(req: NextRequest) {
   const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = await req.json();
@@ -26,7 +29,10 @@ export async function POST(req: NextRequest) {
       status: "paid",
       razorpayPaymentId,
     },
+    include: { school: true },
   });
 
-  return ok({ orderId: order.id, orderNumber: order.orderNumber, status: order.status });
+  revalidateTag(CACHE_TAGS.analytics, { expire: 0 });
+
+  return ok(fmtOrder(order));
 }

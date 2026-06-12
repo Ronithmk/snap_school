@@ -13,6 +13,7 @@ export const QUERY_STALE_TIME_MS = 60_000;
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending_payment: "Pending Payment",
+  cod: "Cash on Delivery",
   paid: "Paid",
   processing: "Processing",
   ready_for_download: "Ready for Download",
@@ -24,6 +25,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_TONE: Record<OrderStatus, "neutral" | "positive" | "warning" | "negative"> = {
   pending_payment: "warning",
+  cod: "warning",
   paid: "positive",
   processing: "neutral",
   ready_for_download: "positive",

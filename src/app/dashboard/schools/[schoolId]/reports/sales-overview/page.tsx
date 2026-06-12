@@ -25,7 +25,7 @@ export default function SchoolSalesOverviewPage({ params }: Props) {
     const orders = ordersPage.data;
     const currency = orders[0]?.totals.currencyCode ?? "USD";
 
-    const completed = orders.filter((o) => ["completed", "paid", "shipped", "ready_for_download"].includes(o.status));
+    const completed = orders.filter((o) => ["completed", "paid", "cod", "shipped", "ready_for_download"].includes(o.status));
     const totalRevenue = completed.reduce((s, o) => s + o.totals.total, 0);
     const avgOrderValue = completed.length > 0 ? totalRevenue / completed.length : 0;
 

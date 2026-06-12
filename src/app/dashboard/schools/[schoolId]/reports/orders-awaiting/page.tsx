@@ -18,7 +18,7 @@ import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
 import type { OrderStatus } from "@/types";
 
-const AWAITING_STATUSES: OrderStatus[] = ["pending_payment", "paid", "processing"];
+const AWAITING_STATUSES: OrderStatus[] = ["pending_payment", "paid", "cod", "processing"];
 
 interface Props { params: Promise<{ schoolId: string }> }
 

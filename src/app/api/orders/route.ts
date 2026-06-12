@@ -26,10 +26,8 @@ export async function GET(req: NextRequest) {
   return ok(paginate(formatted, page, pageSize));
 }
 
+/** Placed by anonymous storefront customers at checkout — no auth required. */
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
-  if (!user) return err("Unauthorized.", 401);
-
   const body = await req.json();
   const {
     schoolId,
@@ -37,12 +35,12 @@ export async function POST(req: NextRequest) {
     albumTitle,
     customerName,
     customerEmail,
-    status,
     items,
     totals,
     shippingMethodId,
     shippingAddress,
     countryCode,
+    paymentMethod,
   } = body;
 
   if (!schoolId || !customerName || !customerEmail) {
@@ -50,6 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   const orderNumber = `SS-${Date.now()}`;
+  const isCod = paymentMethod === "cod";
 
   const order = await db.order.create({
     data: {
@@ -59,13 +58,15 @@ export async function POST(req: NextRequest) {
       albumTitle: albumTitle ?? "",
       customerName,
       customerEmail,
-      status: status ?? "pending",
+      status: isCod ? "cod" : "pending_payment",
+      paymentMethod: isCod ? "cod" : "razorpay",
       items: jsonField(typeof items === "object" ? items : JSON.parse(items ?? "[]")),
       totals: jsonField(typeof totals === "object" ? totals : JSON.parse(totals ?? "{}")),
       shippingMethodId: shippingMethodId ?? null,
       shippingAddress: shippingAddress != null ? jsonField(shippingAddress) : undefined,
       countryCode: countryCode ?? "IN",
     },
+    include: { school: true },
   });
 
   revalidateTag(CACHE_TAGS.analytics, { expire: 0 });

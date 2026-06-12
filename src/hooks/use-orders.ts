@@ -1,14 +1,28 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ordersService } from "@/services";
+import { ordersService, paymentsService } from "@/services";
 import { ORDERS_PAGE_SIZE } from "@/config/constants";
-import type { CreateOrderInput, DownloadAssetRequest, OrderListFilters, QueryParams } from "@/types";
+import type { CreateOrderInput, DownloadAssetRequest, OrderListFilters, QueryParams, VerifyPaymentInput } from "@/types";
 
-/** Places an order at the end of checkout — used by the per-album checkout flow. */
+/** Places a cash-on-delivery order at the end of checkout — used by the per-album checkout flow. */
 export function useCreateOrder() {
   return useMutation({
     mutationFn: (input: CreateOrderInput) => ordersService.create(input),
+  });
+}
+
+/** Creates a pending order + Razorpay order for the "Pay online" checkout flow. */
+export function useCreateRazorpayOrder() {
+  return useMutation({
+    mutationFn: (input: CreateOrderInput) => paymentsService.createRazorpayOrder(input),
+  });
+}
+
+/** Verifies a completed Razorpay payment and marks the order as paid. */
+export function useVerifyPayment() {
+  return useMutation({
+    mutationFn: (input: VerifyPaymentInput) => paymentsService.verifyPayment(input),
   });
 }
 

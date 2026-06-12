@@ -215,6 +215,7 @@ model Order {
   customerName      String
   customerEmail     String
   status            String   @default("pending_payment")
+  paymentMethod     String   @default("razorpay")
   items             String   @default("[]")
   totals            String   @default("{}")
   shippingMethodId  String?

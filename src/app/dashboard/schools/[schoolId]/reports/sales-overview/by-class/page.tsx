@@ -34,7 +34,7 @@ export default function SchoolSalesByClassPage({ params }: Props) {
       const key = o.albumId ?? o.albumTitle;
       if (!albumMap[key]) albumMap[key] = { title: o.albumTitle, revenue: 0, orders: 0, completedOrders: 0 };
       albumMap[key].orders += 1;
-      if (["completed", "paid", "shipped", "ready_for_download"].includes(o.status)) {
+      if (["completed", "paid", "cod", "shipped", "ready_for_download"].includes(o.status)) {
         albumMap[key].revenue += o.totals.total;
         albumMap[key].completedOrders += 1;
       }

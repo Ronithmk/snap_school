@@ -41,7 +41,7 @@ export function buildOrdersWhere(user: AuthUser, filters: OrderListFilters): Rec
     where.schoolId = schoolId;
   }
 
-  if (status) where.status = status;
+  if (status) where.status = status.includes(",") ? { in: status.split(",") } : status;
   if (search) {
     where.OR = [
       { customerName: { contains: search, mode: "insensitive" } },
@@ -65,6 +65,7 @@ export function fmtOrder(o: any): Order { // eslint-disable-line @typescript-esl
     customerName: o.customerName,
     customerEmail: o.customerEmail,
     status: o.status,
+    paymentMethod: o.paymentMethod ?? "razorpay",
     items: parseJsonField<CartLineItem[]>(o.items, []),
     totals: parseJsonField<OrderTotals>(o.totals, { subtotal: 0, discount: 0, shipping: 0, tax: 0, total: 0, currencyCode: "INR" }),
     shippingMethodId: o.shippingMethodId ?? null,

@@ -4,6 +4,7 @@ export { classesService } from "./classes.service";
 export { albumsService } from "./albums.service";
 export { pricingService } from "./pricing.service";
 export { ordersService } from "./orders.service";
+export { paymentsService } from "./payments.service";
 export { analyticsService } from "./analytics.service";
 export { labService } from "./lab.service";
 export { studentsService } from "./students.service";
