@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
 
   const where: Record<string, any> = {
     schoolId,
-    status: { in: ["paid", "processing"] },
+    status: { in: ["paid", "cod", "processing"] },
   };
   if (orderIds?.length) where.id = { in: orderIds };
 
@@ -106,10 +106,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
 
   // Mark orders as processing
   if (markProcessing) {
-    const paidIds = orders.filter((o) => o.status === "paid").map((o) => o.id);
-    if (paidIds.length) {
+    const pendingIds = orders.filter((o) => o.status === "paid" || o.status === "cod").map((o) => o.id);
+    if (pendingIds.length) {
       await db.order.updateMany({
-        where: { id: { in: paidIds } },
+        where: { id: { in: pendingIds } },
         data: { status: "processing" },
       });
     }
