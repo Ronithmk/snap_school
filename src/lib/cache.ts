@@ -45,7 +45,7 @@ export const getCachedSchools = unstable_cache(
   async () => {
     const schools = await db.school.findMany({ orderBy: { name: "asc" } });
     const classes = await db.schoolClass.groupBy({ by: ["schoolId"], _count: true });
-    const albums = await db.album.groupBy({ by: ["schoolId"], _count: true });
+    const albums = await db.album.groupBy({ by: ["schoolId"], where: { isStaging: false }, _count: true });
     const classMap = Object.fromEntries(classes.map((c) => [c.schoolId, c._count]));
     const albumMap = Object.fromEntries(albums.map((a) => [a.schoolId, a._count]));
     return schools.map((s) =>
@@ -62,7 +62,7 @@ export const getCachedSchoolBySlug = unstable_cache(
     if (!school) return null;
     const [classCount, albumCount] = await Promise.all([
       db.schoolClass.count({ where: { schoolId: school.id } }),
-      db.album.count({ where: { schoolId: school.id } }),
+      db.album.count({ where: { schoolId: school.id, isStaging: false } }),
     ]);
     return formatDbSchool(school, { classCount, albumCount });
   },

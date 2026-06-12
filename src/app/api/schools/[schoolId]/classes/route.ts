@@ -4,8 +4,9 @@ import { db } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
+import { ensureStagingAlbum } from "@/lib/staging-album";
 
-function fmtClass(c: any, albumCount = 0) {
+function fmtClass(c: any, albumCount = 0, stagingAlbumId: string | null = null) {
   return {
     id: c.id,
     schoolId: c.schoolId,
@@ -15,6 +16,7 @@ function fmtClass(c: any, albumCount = 0) {
     studentCount: c.studentCount,
     priceListId: c.priceListId ?? null,
     albumCount,
+    stagingAlbumId,
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -29,8 +31,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
 
   const result = await Promise.all(
     classes.map(async (c) => {
-      const albumCount = await db.album.count({ where: { classId: c.id } });
-      return fmtClass(c, albumCount);
+      const albumCount = await db.album.count({ where: { classId: c.id, isStaging: false } });
+      const staging = await db.album.findFirst({ where: { classId: c.id, isStaging: true } });
+      return fmtClass(c, albumCount, staging?.id ?? null);
     })
   );
 
@@ -61,7 +64,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sch
     },
   });
 
+  const staging = await ensureStagingAlbum(newClass.id);
+
   revalidateTag(CACHE_TAGS.schools, { expire: 0 });
 
-  return ok(fmtClass(newClass, 0), 201);
+  return ok(fmtClass(newClass, 0, staging?.id ?? null), 201);
 }

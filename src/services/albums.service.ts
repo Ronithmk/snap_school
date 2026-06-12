@@ -13,6 +13,8 @@ import type {
   PaginatedResponse,
   Photo,
   QueryParams,
+  SplitAlbumGroupInput,
+  SplitAlbumResult,
   UpdateAlbumInput,
   UploadPhotosInput,
 } from "@/types";
@@ -22,6 +24,8 @@ const ENDPOINTS = {
   byId: (id: string) => `/albums/${id}`,
   verifyAccess: (id: string) => `/albums/${id}/verify-access`,
   photos: (id: string) => `/albums/${id}/photos`,
+  split: (id: string) => `/albums/${id}/split`,
+  stagingAlbum: (classId: string) => `/classes/${classId}/staging-album`,
 } as const;
 
 /** Mock-only: passwords for protected albums (a real backend never exposes this to the client). */
@@ -93,6 +97,7 @@ export const albumsService = {
         pricing: { priceListId: priceListId ?? null, currencyCode: school?.settings.currencyCode ?? "" },
         photoCount: 0,
         flaggedCount: 0,
+        isStaging: false,
         studentId: inputStudentId ?? null,
         passwordProtected: !!password,
         createdAt: now,
@@ -175,6 +180,24 @@ export const albumsService = {
       return mockDelay({ id: photoId, category } as unknown as Photo, 200);
     }
     const { data } = await apiClient.patch<Photo>(`/photos/${photoId}`, { category });
+    return data;
+  },
+
+  /** Splits a staging album's photos into new per-group albums. */
+  async splitAlbum(albumId: string, groups: SplitAlbumGroupInput[]): Promise<SplitAlbumResult> {
+    if (env.useMockApi) {
+      return mockDelay({ albums: [] }, 300);
+    }
+    const { data } = await apiClient.post<SplitAlbumResult>(ENDPOINTS.split(albumId), { groups });
+    return data;
+  },
+
+  /** Get-or-create the "Photo intake" staging album for a class. */
+  async ensureStagingAlbum(classId: string): Promise<{ id: string }> {
+    if (env.useMockApi) {
+      return mockDelay({ id: `alb_staging_${classId}` }, 200);
+    }
+    const { data } = await apiClient.post<{ id: string }>(ENDPOINTS.stagingAlbum(classId));
     return data;
   },
 };

@@ -2,20 +2,22 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, MessageCircle, Pencil, Plus, ShoppingCart, Upload } from "lucide-react";
+import { toast } from "sonner";
+import { Check, ChevronRight, Copy, ExternalLink, ImageIcon, MessageCircle, Pencil, Plus, Scissors, ShoppingCart, Sparkles, Upload } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlbumFormSheet, ClassFormSheet } from "@/components/dashboard";
 import { StudentImportSheet } from "@/components/dashboard/student-import-sheet";
 import { useSchool } from "@/hooks/use-tenant";
-import { useClass, useSchoolAlbums, useSchoolClasses } from "@/hooks/use-albums";
+import { useAlbum, useClass, useEnsureStagingAlbum, useSchoolAlbums, useSchoolClasses } from "@/hooks/use-albums";
 import { ALBUM_VISIBILITY_LABELS, ALBUM_VISIBILITY_TONE } from "@/config/constants";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
+import type { ApiError } from "@/types";
 
 interface ClassDetailPageProps {
   params: Promise<{ schoolId: string; classId: string }>;
@@ -27,10 +29,21 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
   const { data: schoolClass, isLoading: isClassLoading } = useClass(classId);
   const { data: classes } = useSchoolClasses(schoolId);
   const { data: albums, isLoading: isAlbumsLoading } = useSchoolAlbums(schoolId, { classId });
+  const { data: stagingAlbum } = useAlbum(schoolClass?.stagingAlbumId ?? undefined);
+  const ensureStagingAlbum = useEnsureStagingAlbum(schoolId);
 
   const [editOpen, setEditOpen] = useState(false);
   const [createAlbumOpen, setCreateAlbumOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  async function handleSetupIntake() {
+    try {
+      await ensureStagingAlbum.mutateAsync(classId);
+      toast.success("Photo intake album created.");
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't set up photo intake. Please try again.");
+    }
+  }
 
   if (isSchoolLoading || isClassLoading || !school || !schoolClass) {
     return (
@@ -97,6 +110,53 @@ export default function ClassDetailPage({ params }: ClassDetailPageProps) {
           </div>
         </CardContent>
       </Card>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight">Photo intake</h2>
+        {schoolClass.stagingAlbumId && stagingAlbum ? (
+          <Card className="border-positive/40 bg-positive/5">
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-positive/15 text-positive">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-medium">Photo intake — upload here</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stagingAlbum.photoCount} unsorted photo{stagingAlbum.photoCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link href={routes.dashboard.album(schoolId, stagingAlbum.id)} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                  <Upload className="h-4 w-4" />
+                  Upload photos
+                </Link>
+                <Link
+                  href={routes.dashboard.classSort(schoolId, classId)}
+                  className={cn(buttonVariants({ size: "sm" }), stagingAlbum.photoCount === 0 && "pointer-events-none opacity-50")}
+                  aria-disabled={stagingAlbum.photoCount === 0}
+                >
+                  <Scissors className="h-4 w-4" />
+                  Sort &amp; create albums
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={Sparkles}
+            title="No photo intake set up"
+            description="Create a shared intake album where you can upload photos, then sort and split them into per-student albums."
+            action={
+              <Button onClick={handleSetupIntake} disabled={ensureStagingAlbum.isPending}>
+                <Sparkles className="h-4 w-4" />
+                Set up photo intake
+              </Button>
+            }
+          />
+        )}
+      </div>
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">Albums</h2>

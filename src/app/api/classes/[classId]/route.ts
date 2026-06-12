@@ -5,7 +5,7 @@ import { getAuthUser } from "@/lib/auth-server";
 import { ok, err } from "@/lib/api-helpers";
 import { CACHE_TAGS } from "@/lib/cache";
 
-function fmtClass(c: any, albumCount = 0) {
+function fmtClass(c: any, albumCount = 0, stagingAlbumId: string | null = null) {
   return {
     id: c.id,
     schoolId: c.schoolId,
@@ -15,6 +15,7 @@ function fmtClass(c: any, albumCount = 0) {
     studentCount: c.studentCount,
     priceListId: c.priceListId ?? null,
     albumCount,
+    stagingAlbumId,
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -28,9 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ clas
   const cls = await db.schoolClass.findUnique({ where: { id: classId } });
   if (!cls) return err("Class not found.", 404);
 
-  const albumCount = await db.album.count({ where: { classId } });
+  const albumCount = await db.album.count({ where: { classId, isStaging: false } });
+  const staging = await db.album.findFirst({ where: { classId, isStaging: true } });
 
-  return ok(fmtClass(cls, albumCount));
+  return ok(fmtClass(cls, albumCount, staging?.id ?? null));
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ classId: string }> }) {
@@ -50,9 +52,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ cl
 
   const cls = await db.schoolClass.update({ where: { id: classId }, data });
 
-  const albumCount = await db.album.count({ where: { classId } });
+  const albumCount = await db.album.count({ where: { classId, isStaging: false } });
+  const staging = await db.album.findFirst({ where: { classId, isStaging: true } });
 
-  return ok(fmtClass(cls, albumCount));
+  return ok(fmtClass(cls, albumCount, staging?.id ?? null));
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ classId: string }> }) {

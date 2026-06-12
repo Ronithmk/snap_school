@@ -22,6 +22,7 @@ function fmtAlbum(a: any) {
     pricing: { priceListId: a.priceListId ?? a.class?.priceListId ?? null, currencyCode: "" },
     photoCount: a.photoCount,
     flaggedCount: a.flaggedCount,
+    isStaging: !!a.isStaging,
     eventDate: a.eventDate?.toISOString() ?? undefined,
     createdAt: a.createdAt.toISOString(),
     updatedAt: a.updatedAt.toISOString(),

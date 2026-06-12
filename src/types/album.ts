@@ -11,6 +11,8 @@ export interface SchoolClass {
   studentCount?: number;
   /** Price list assigned to this class — all albums in this class inherit it. */
   priceListId?: ID | null;
+  /** The "Photo intake" staging album for this class, if one has been set up. */
+  stagingAlbumId?: ID | null;
   createdAt: ISODateString;
 }
 
@@ -64,6 +66,8 @@ export interface Album {
   photoCount: number;
   /** How many photos in this album are currently flagged as face mismatches. */
   flaggedCount: number;
+  /** True for the auto-created "Photo intake" album that holds unsorted uploads for a class. */
+  isStaging: boolean;
   eventDate?: ISODateString;
   createdAt: ISODateString;
   updatedAt: ISODateString;
@@ -117,6 +121,23 @@ export interface AlbumAccessRequest {
 export interface UploadPhotosInput {
   albumId: ID;
   files: File[];
+}
+
+/** One group of photos to split out of a staging album into its own album. */
+export interface SplitAlbumGroupInput {
+  title: string;
+  photoIds: ID[];
+  coverPhotoId?: ID;
+  studentId?: ID | null;
+}
+
+export interface SplitAlbumInput {
+  albumId: ID;
+  groups: SplitAlbumGroupInput[];
+}
+
+export interface SplitAlbumResult {
+  albums: Album[];
 }
 
 /** Summary of a flagged photo, used on the admin review page. */

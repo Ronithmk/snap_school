@@ -26,6 +26,7 @@ export const routes = {
     schools: () => "/dashboard/schools",
     school: (schoolId: string) => `/dashboard/schools/${schoolId}`,
     class: (schoolId: string, classId: string) => `/dashboard/schools/${schoolId}/classes/${classId}`,
+    classSort: (schoolId: string, classId: string) => `/dashboard/schools/${schoolId}/classes/${classId}/sort`,
     album: (schoolId: string, albumId: string) => `/dashboard/schools/${schoolId}/albums/${albumId}`,
     priceLists: () => "/dashboard/price-lists",
     // ── School-level routes ────────────────────────────────────────

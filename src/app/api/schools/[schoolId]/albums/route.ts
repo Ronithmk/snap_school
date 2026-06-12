@@ -22,6 +22,7 @@ function fmtAlbum(a: any) {
     pricing: { priceListId: a.priceListId ?? null, currencyCode: "" },
     photoCount: a.photoCount,
     flaggedCount: a.flaggedCount,
+    isStaging: !!a.isStaging,
     eventDate: a.eventDate?.toISOString() ?? undefined,
     createdAt: a.createdAt.toISOString(),
     updatedAt: a.updatedAt.toISOString(),
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ scho
   const page = parseIntParam(searchParams.get("page"), 1);
   const pageSize = parseIntParam(searchParams.get("pageSize"), 20);
 
-  const where: Record<string, any> = { schoolId };
+  const where: Record<string, any> = { schoolId, isStaging: false };
   if (classId) where.classId = classId;
   if (search) where.title = { contains: search, mode: "insensitive" };
 

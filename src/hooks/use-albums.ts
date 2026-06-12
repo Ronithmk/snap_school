@@ -7,6 +7,7 @@ import type {
   AlbumAccessRequest,
   CreateAlbumInput,
   CreateClassInput,
+  SplitAlbumGroupInput,
   UpdateAlbumInput,
   UpdateClassInput,
   UploadPhotosInput,
@@ -166,6 +167,33 @@ export function useUpdatePhotoCategory(albumId: string | undefined) {
       albumsService.updatePhotoCategory(photoId, category),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["album-photos", albumId] });
+    },
+  });
+}
+
+/** Splits a staging album's photos into new per-group albums. */
+export function useSplitAlbum(schoolId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ albumId, groups }: { albumId: string; groups: SplitAlbumGroupInput[] }) =>
+      albumsService.splitAlbum(albumId, groups),
+    onSuccess: (_result, { albumId }) => {
+      queryClient.invalidateQueries({ queryKey: ["albums", schoolId] });
+      queryClient.invalidateQueries({ queryKey: ["album", albumId] });
+      queryClient.invalidateQueries({ queryKey: ["album-photos", albumId] });
+      queryClient.invalidateQueries({ queryKey: ["classes", schoolId] });
+    },
+  });
+}
+
+/** Get-or-create the "Photo intake" staging album for a class. */
+export function useEnsureStagingAlbum(schoolId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (classId: string) => albumsService.ensureStagingAlbum(classId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classes", schoolId] });
+      queryClient.invalidateQueries({ queryKey: ["class"] });
     },
   });
 }
