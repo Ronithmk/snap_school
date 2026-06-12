@@ -4,30 +4,13 @@ import { getAuthUser } from "@/lib/auth-server";
 import { ok, err, parseIntParam, paginate } from "@/lib/api-helpers";
 import { processImage, sanitizeFileName } from "@/lib/image";
 import { uploadToR2, R2_PUBLIC_URL, STORAGE_CONFIGURED } from "@/lib/r2";
+import { fmtPhoto } from "@/lib/format-photo";
 
 // Fallback to local storage if no object storage is configured
 import fs from "fs";
 import path from "path";
 
 const USE_R2 = STORAGE_CONFIGURED;
-
-function fmtPhoto(p: any) {
-  return {
-    id: p.id,
-    albumId: p.albumId,
-    previewUrl: p.previewUrl,
-    hdUrl: p.hdUrl,
-    thumbnailUrl: p.thumbnailUrl,
-    width: p.width,
-    height: p.height,
-    fileName: p.fileName,
-    tags: (p.tags ?? []).map((t: any) => ({ id: t.tag.id, label: t.tag.label })),
-    isFavorite: p.isFavorite,
-    faceValidationStatus: p.faceValidationStatus,
-    category: p.category ?? null,
-    createdAt: p.createdAt.toISOString(),
-  };
-}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = await params;

@@ -1,4 +1,6 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import type { Readable } from "stream";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /** Treats unfilled `.env` placeholders like `[CLOUDFLARE_ACCOUNT_ID]` as unset. */
 function envValue(name: string): string {
@@ -67,6 +69,20 @@ export async function uploadToR2(key: string, buffer: Buffer, contentType: strin
 
 export async function deleteFromR2(key: string) {
   await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+}
+
+export async function downloadFromR2(key: string): Promise<Buffer> {
+  const result = await r2.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+  const stream = result.Body as Readable;
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks);
+}
+
+/** Returns a short-lived URL the browser can PUT a file to directly, bypassing the server. */
+export async function presignUpload(key: string, contentType: string, expiresInSeconds = 600) {
+  const command = new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: contentType });
+  return getSignedUrl(r2, command, { expiresIn: expiresInSeconds });
 }
 
 export function r2KeyFromUrl(url: string) {

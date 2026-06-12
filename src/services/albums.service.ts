@@ -8,6 +8,7 @@ import { routes } from "@/config/routes";
 import type {
   Album,
   AlbumAccessRequest,
+  ApiError,
   CreateAlbumInput,
   FlaggedPhotoReport,
   PaginatedResponse,
@@ -24,6 +25,8 @@ const ENDPOINTS = {
   byId: (id: string) => `/albums/${id}`,
   verifyAccess: (id: string) => `/albums/${id}/verify-access`,
   photos: (id: string) => `/albums/${id}/photos`,
+  presignPhotos: (id: string) => `/albums/${id}/photos/presign`,
+  finalizePhotos: (id: string) => `/albums/${id}/photos/finalize`,
   split: (id: string) => `/albums/${id}/split`,
   stagingAlbum: (classId: string) => `/classes/${classId}/staging-album`,
 } as const;
@@ -145,6 +148,34 @@ export const albumsService = {
       const result = addPhotosToAlbum(albumId, files);
       return mockDelay(result, 700);
     }
+
+    // Try uploading the raw files straight to object storage first — this avoids the
+    // serverless function body-size limit that bulk uploads would otherwise hit.
+    try {
+      const { data: presigned } = await apiClient.post<{ uploads: { key: string; uploadUrl: string; fileName: string }[] }>(
+        ENDPOINTS.presignPhotos(albumId),
+        { files: files.map((file) => ({ fileName: file.name, contentType: file.type || "application/octet-stream" })) },
+      );
+
+      await Promise.all(
+        presigned.uploads.map((upload, i) =>
+          fetch(upload.uploadUrl, {
+            method: "PUT",
+            body: files[i],
+            headers: { "Content-Type": files[i].type || "application/octet-stream" },
+          }),
+        ),
+      );
+
+      const { data } = await apiClient.post<{ photos: Photo[]; flaggedCount: number }>(ENDPOINTS.finalizePhotos(albumId), {
+        uploads: presigned.uploads.map(({ key, fileName }) => ({ key, fileName })),
+      });
+      return data;
+    } catch (e) {
+      if ((e as ApiError).code !== "storage_not_configured") throw e;
+    }
+
+    // Fall back to uploading the files through the API route (local/dev storage).
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
     const { data } = await apiClient.post<{ photos: Photo[]; flaggedCount: number }>(ENDPOINTS.photos(albumId), formData, {
