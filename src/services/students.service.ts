@@ -2,13 +2,14 @@ import { apiClient } from "@/lib/api-client";
 import { env } from "@/config/env";
 import { mockDelay } from "@/services/mock/transport";
 import { MOCK_STUDENTS } from "@/services/mock/seed-data";
-import type { Album, CreateStudentInput, Photo, PriceList, Student } from "@/types";
+import type { Album, CreateStudentInput, Photo, PriceList, Student, StudentLookupInput } from "@/types";
 
 const ENDPOINTS = {
   list: "/students",
   byId: (id: string) => `/students/${id}`,
   album: (id: string) => `/students/${id}/album`,
   ensureForAlbum: (albumId: string) => `/albums/${albumId}/student`,
+  lookup: "/students/lookup",
 } as const;
 
 export interface StudentAlbumResponse {
@@ -126,6 +127,19 @@ export const studentsService = {
       return mockDelay(student);
     }
     const { data } = await apiClient.post<Student>(ENDPOINTS.ensureForAlbum(albumId));
+    return data;
+  },
+
+  /** Public: resolves a student's username + access code to a student id, scoped to a school — powers the storefront gallery gate. */
+  async lookup(input: StudentLookupInput): Promise<{ studentId: string }> {
+    if (env.useMockApi) {
+      const student = mockStudents.find(
+        (s) => s.username === input.username && s.accessCode === input.accessCode,
+      );
+      if (!student) throw new Error("We couldn't find a student with that username and access code.");
+      return mockDelay({ studentId: student.id });
+    }
+    const { data } = await apiClient.post<{ studentId: string }>(ENDPOINTS.lookup, input);
     return data;
   },
 

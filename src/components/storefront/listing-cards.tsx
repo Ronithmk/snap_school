@@ -1,44 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ImageIcon, Lock, Users } from "lucide-react";
+import { ArrowRight, ImageIcon, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { routes } from "@/config/routes";
-import type { Album, School, SchoolClass } from "@/types";
-
-interface ClassCardProps {
-  school: School;
-  schoolClass: SchoolClass;
-}
-
-export function ClassCard({ school, schoolClass }: ClassCardProps) {
-  return (
-    <Link href={routes.storefront.class(school.slug, schoolClass.slug)}>
-      <Card className="group relative h-full overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent opacity-70 transition-opacity group-hover:opacity-100" />
-        <div className="space-y-3 p-5">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold tracking-tight transition-colors group-hover:text-primary">{schoolClass.name}</p>
-            <ArrowRight className="h-4 w-4 -translate-x-1 text-muted-foreground/40 opacity-0 transition-all group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
-          </div>
-          {schoolClass.grouping ? <p className="text-sm text-muted-foreground">{schoolClass.grouping}</p> : null}
-          <div className="flex items-center gap-4 pt-1 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1">
-              <ImageIcon className="h-3.5 w-3.5" />
-              {schoolClass.albumCount} {schoolClass.albumCount === 1 ? "album" : "albums"}
-            </span>
-            {schoolClass.studentCount ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1">
-                <Users className="h-3.5 w-3.5" />
-                {schoolClass.studentCount} students
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </Card>
-    </Link>
-  );
-}
+import type { Album, School } from "@/types";
 
 interface AlbumCardProps {
   school: School;

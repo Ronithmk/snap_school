@@ -22,3 +22,9 @@ export interface CreateStudentInput {
   number?: string;
   coverPhotoUrl?: string;
 }
+
+export interface StudentLookupInput {
+  username: string;
+  accessCode: string;
+  schoolSlug: string;
+}

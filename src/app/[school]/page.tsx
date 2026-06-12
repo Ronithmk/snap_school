@@ -1,17 +1,23 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect } from "react";
 import Link from "next/link";
-import { Camera, ImageIcon, Search, Sparkles, Tag, Users } from "lucide-react";
-import { EmptyState } from "@/components/shared/empty-state";
-import { SkeletonGrid } from "@/components/shared/skeleton-grid";
-import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { ImageOff, KeyRound, Loader2, Sparkles, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlbumCard, ClassCard } from "@/components/storefront/listing-cards";
-import { useSchoolAlbums, useSchoolClasses } from "@/hooks/use-albums";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useSession } from "@/hooks/use-auth";
+import { useParentChildren } from "@/hooks/use-parent";
+import { useStudentLookup } from "@/hooks/use-students";
 import { useSchoolBySlug } from "@/hooks/use-tenant";
 import { useContentBlocks } from "@/hooks/use-content";
-import type { ContentBlock, AnnouncementStyle } from "@/types";
+import { routes } from "@/config/routes";
+import type { ApiError, ContentBlock, AnnouncementStyle } from "@/types";
 
 interface TenantHomePageProps {
   params: Promise<{ school: string }>;
@@ -121,24 +127,134 @@ function SponsorCard({ block }: { block: ContentBlock }) {
   ) : inner;
 }
 
+// ── Gallery access gate ────────────────────────────────────────────
+
+interface AccessCodeFormValues {
+  username: string;
+  accessCode: string;
+}
+
+function GalleryAccessForm({ schoolSlug }: { schoolSlug: string }) {
+  const router = useRouter();
+  const lookup = useStudentLookup();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AccessCodeFormValues>({ defaultValues: { username: "", accessCode: "" } });
+
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      const result = await lookup.mutateAsync({ ...values, schoolSlug });
+      router.push(routes.storefront.parent(schoolSlug, result.studentId));
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't find your gallery. Please check the details and try again.");
+    }
+  });
+
+  return (
+    <Card className="mx-auto max-w-sm border-border/60 shadow-sm">
+      <CardContent className="space-y-4 p-6">
+        <div className="space-y-1.5 text-center">
+          <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <KeyRound className="h-5 w-5" />
+          </span>
+          <h2 className="text-lg font-semibold tracking-tight">View your gallery</h2>
+          <p className="text-sm text-muted-foreground">
+            Enter the username and access code from your child&apos;s access card to view their photos.
+          </p>
+        </div>
+
+        <form onSubmit={onSubmit} noValidate className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="gallery-username">Username</Label>
+            <Input id="gallery-username" autoComplete="off" placeholder="e.g. 1234567" {...register("username", { required: true })} />
+            {errors.username && <p className="text-xs text-destructive">Username is required</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="gallery-access-code">Access code</Label>
+            <Input id="gallery-access-code" autoComplete="off" placeholder="e.g. AB12CD" {...register("accessCode", { required: true })} />
+            {errors.accessCode && <p className="text-xs text-destructive">Access code is required</p>}
+          </div>
+          <Button type="submit" className="w-full" disabled={lookup.isPending}>
+            {lookup.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            View my gallery
+          </Button>
+        </form>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Don&apos;t have an access code?{" "}
+          <Link href={routes.parentRegister()} className="font-medium text-foreground underline-offset-2 hover:underline">
+            Create a parent account
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChildPicker({ schoolSlug, children }: { schoolSlug: string; children: { studentId: string; studentName: string; coverPhotoUrl: string | null }[] }) {
+  return (
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="space-y-1.5 text-center">
+        <h2 className="text-lg font-semibold tracking-tight">Choose your child</h2>
+        <p className="text-sm text-muted-foreground">You have multiple children linked at this school — pick one to view their gallery.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {children.map((child) => (
+          <Link key={child.studentId} href={routes.storefront.parent(schoolSlug, child.studentId)}>
+            <Card className="overflow-hidden transition-colors hover:border-primary/40">
+              <div className="aspect-video w-full overflow-hidden bg-muted">
+                {child.coverPhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={child.coverPhotoUrl} alt={child.studentName} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <ImageOff className="h-6 w-6" />
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <p className="font-medium">{child.studentName}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────
 
 export default function TenantHomePage({ params }: TenantHomePageProps) {
   const { school: slug } = use(params);
+  const router = useRouter();
   const { data: school, isLoading: isSchoolLoading } = useSchoolBySlug(slug);
-  const { data: classes, isLoading: isClassesLoading } = useSchoolClasses(school?.id);
-  const [search, setSearch] = useState("");
-  const { data: albums, isLoading: isAlbumsLoading } = useSchoolAlbums(school?.id, { search: search || undefined });
   const { data: allBlocks } = useContentBlocks(school?.id);
 
-  if (isSchoolLoading || !school) {
+  const { user, isLoading: isSessionLoading } = useSession();
+  const isParent = user?.role === "parent";
+  const { data: children, isLoading: isChildrenLoading } = useParentChildren({ enabled: isParent });
+  const schoolChildren = (children ?? []).filter((c) => c.schoolSlug === slug);
+
+  useEffect(() => {
+    if (isParent && schoolChildren.length === 1) {
+      router.replace(routes.storefront.parent(slug, schoolChildren[0].studentId));
+    }
+  }, [isParent, schoolChildren, slug, router]);
+
+  const isLoading =
+    isSchoolLoading || isSessionLoading || (isParent && isChildrenLoading) || (isParent && schoolChildren.length === 1);
+
+  if (isLoading || !school) {
     return (
-      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-12 sm:px-6">
+        <div className="space-y-2 text-center">
+          <Skeleton className="mx-auto h-8 w-64" />
+          <Skeleton className="mx-auto h-4 w-96" />
         </div>
-        <SkeletonGrid count={4} />
+        <Skeleton className="mx-auto h-64 max-w-sm" />
       </div>
     );
   }
@@ -149,7 +265,6 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
   const promotions = activeBlocks.filter((b) => b.type === "promotion");
   const sponsors = activeBlocks.filter((b) => b.type === "sponsor");
 
-  const totalPhotos = (albums?.data ?? []).reduce((sum, a) => sum + a.photoCount, 0);
   const primaryColor = school.settings?.primaryColor;
 
   return (
@@ -157,51 +272,25 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
       {/* Announcement bars — above all content */}
       {announcements.map((b) => <AnnouncementBar key={b.id} block={b} />)}
 
-      {/* Default hero — only when the school hasn't configured a CMS banner */}
-      {banners.length === 0 && (
-        <div
-          className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"
-          style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}26, ${primaryColor}08, transparent)` } : undefined}
-        >
-          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-32 left-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-          <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-background/60 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" />
-              Photo gallery & store
-            </span>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{school.name}</h1>
-            <p className="mt-2 max-w-xl text-muted-foreground sm:text-lg">
-              {school.description ?? "Browse class albums and order your favorite photos."}
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
-                <ImageIcon className="h-4 w-4 text-primary" />
-                {albums?.meta.total ?? albums?.data.length ?? 0} albums
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
-                <Camera className="h-4 w-4 text-primary" />
-                {totalPhotos}+ photos
-              </span>
-              {classes && classes.length > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-medium shadow-sm backdrop-blur">
-                  <Users className="h-4 w-4 text-primary" />
-                  {classes.length} {classes.length === 1 ? "class" : "classes"}
-                </span>
-              )}
-            </div>
-          </div>
+      <div
+        className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"
+        style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}26, ${primaryColor}08, transparent)` } : undefined}
+      >
+        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative mx-auto max-w-6xl px-4 py-12 text-center sm:px-6 sm:py-16">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-background/60 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
+            <Sparkles className="h-3.5 w-3.5" />
+            Photo gallery & store
+          </span>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{school.name}</h1>
+          <p className="mx-auto mt-2 max-w-xl text-muted-foreground sm:text-lg">
+            {school.description ?? "View and order your child's school photos."}
+          </p>
         </div>
-      )}
+      </div>
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12">
-        {banners.length > 0 && (
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{school.name}</h1>
-            {school.description && <p className="text-muted-foreground">{school.description}</p>}
-          </div>
-        )}
-
         {/* Hero banners */}
         {banners.length > 0 && (
           <div className="space-y-4">
@@ -216,47 +305,11 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
           </div>
         )}
 
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="h-5 w-1 rounded-full bg-primary" />
-            <h2 className="text-lg font-semibold tracking-tight">Classes</h2>
-          </div>
-          {isClassesLoading || !classes ? (
-            <SkeletonGrid count={4} />
-          ) : classes.length === 0 ? (
-            <EmptyState title="No classes published yet" description="Check back soon — this school hasn't published any classes." />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {classes.map((schoolClass) => (
-                <ClassCard key={schoolClass.id} school={school} schoolClass={schoolClass} />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="h-5 w-1 rounded-full bg-primary" />
-              <h2 className="text-lg font-semibold tracking-tight">All albums</h2>
-            </div>
-            <div className="relative sm:w-72">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search albums…" className="pl-9" aria-label="Search albums" />
-            </div>
-          </div>
-          {isAlbumsLoading || !albums ? (
-            <SkeletonGrid count={8} />
-          ) : albums.data.length === 0 ? (
-            <EmptyState icon={Search} title="No albums found" description="Try a different search term, or check back later for new albums." />
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {albums.data.map((album) => (
-                <AlbumCard key={album.id} school={school} album={album} />
-              ))}
-            </div>
-          )}
-        </section>
+        {isParent && schoolChildren.length > 1 ? (
+          <ChildPicker schoolSlug={slug} children={schoolChildren} />
+        ) : (
+          <GalleryAccessForm schoolSlug={slug} />
+        )}
 
         {/* Sponsors */}
         {sponsors.length > 0 && (

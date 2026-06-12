@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { studentsService } from "@/services";
-import type { CreateStudentInput } from "@/types";
+import type { CreateStudentInput, StudentLookupInput } from "@/types";
 
 const listKey = (schoolId: string, classId?: string) =>
   classId ? ["students", schoolId, classId] : ["students", schoolId];
@@ -46,6 +46,13 @@ export function useStudentAlbum(studentId: string | undefined) {
     queryKey: ["student-album", studentId],
     queryFn: () => studentsService.getAlbum(studentId!),
     enabled: !!studentId,
+  });
+}
+
+/** Public: resolve a student's username + access code to a student id, scoped to a school — powers the storefront gallery gate. */
+export function useStudentLookup() {
+  return useMutation({
+    mutationFn: (input: StudentLookupInput) => studentsService.lookup(input),
   });
 }
 

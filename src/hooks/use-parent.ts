@@ -11,10 +11,11 @@ export function useParentRegister() {
   });
 }
 
-export function useParentChildren() {
+export function useParentChildren(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["parent-children"],
     queryFn: () => parentService.getChildren(),
+    enabled: options.enabled ?? true,
   });
 }
 
