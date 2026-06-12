@@ -47,7 +47,7 @@ interface AlbumCardProps {
 
 export function AlbumCard({ school, album }: AlbumCardProps) {
   return (
-    <Link href={routes.storefront.album(school.slug, album.id)}>
+    <Link href={routes.storefront.album(school.slug, album.id)} data-testid="album-card">
       <Card className="group h-full overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {album.coverImageUrl ? (

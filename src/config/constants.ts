@@ -11,6 +11,9 @@ import type {
 
 export const QUERY_STALE_TIME_MS = 60_000;
 
+/** Orders in these statuses can still be cancelled by staff. */
+export const CANCELLABLE_ORDER_STATUSES: OrderStatus[] = ["pending_payment", "cod", "paid", "processing"];
+
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending_payment: "Pending Payment",
   cod: "Cash on Delivery",

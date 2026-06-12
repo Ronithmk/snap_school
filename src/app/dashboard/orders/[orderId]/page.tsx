@@ -3,15 +3,15 @@
 import { use } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronRight, Download, FileText, Loader2, Package } from "lucide-react";
+import { Ban, ChevronRight, Download, FileText, Loader2, Package } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrder, useRequestDownload, downloadOrderAsset } from "@/hooks/use-orders";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
+import { useCancelOrder, useOrder, useRequestDownload, downloadOrderAsset } from "@/hooks/use-orders";
+import { CANCELLABLE_ORDER_STATUSES, ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "@/config/constants";
 import { formatCurrency } from "@/config/currency";
 import { routes } from "@/config/routes";
 import type { ApiError, DownloadAssetType } from "@/types";
@@ -30,6 +30,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { orderId } = use(params);
   const { data: order, isLoading } = useOrder(orderId);
   const requestDownload = useRequestDownload();
+  const cancelOrder = useCancelOrder();
 
   async function handleDownload(assetType: DownloadAssetType) {
     try {
@@ -37,6 +38,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       downloadOrderAsset(blob, assetType, order!.orderNumber);
     } catch (err) {
       toast.error((err as ApiError).message ?? "Couldn't generate the download. Please try again.");
+    }
+  }
+
+  async function handleCancel() {
+    if (!window.confirm("Cancel this order? This can't be undone.")) return;
+    try {
+      await cancelOrder.mutateAsync(orderId);
+      toast.success("Order cancelled.");
+    } catch (err) {
+      toast.error((err as ApiError).message ?? "Couldn't cancel the order. Please try again.");
     }
   }
 
@@ -65,7 +76,17 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       <PageHeader
         title={order.orderNumber}
         description={`Placed ${new Date(order.placedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })} · ${order.schoolName} · ${order.albumTitle}`}
-        actions={<Badge variant={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABELS[order.status]}</Badge>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Badge data-testid="order-status-badge" variant={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABELS[order.status]}</Badge>
+            {CANCELLABLE_ORDER_STATUSES.includes(order.status) && (
+              <Button data-testid="cancel-order-button" variant="outline" size="sm" onClick={handleCancel} disabled={cancelOrder.isPending}>
+                {cancelOrder.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                Cancel order
+              </Button>
+            )}
+          </div>
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

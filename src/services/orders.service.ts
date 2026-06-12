@@ -71,6 +71,19 @@ export const ordersService = {
     return data;
   },
 
+  /** Cancels an order — only orders that haven't shipped/completed yet are cancellable. */
+  async cancel(orderId: string): Promise<Order> {
+    if (env.useMockApi) {
+      const order = MOCK_ORDERS.find((o) => o.id === orderId);
+      if (!order) throw new Error("Order not found.");
+      order.status = "cancelled";
+      order.updatedAt = new Date().toISOString();
+      return mockDelay(order);
+    }
+    const { data } = await apiClient.patch<Order>(ENDPOINTS.byId(orderId), { status: "cancelled" });
+    return data;
+  },
+
   /** Downloads the requested asset as a blob (mock returns an empty placeholder). */
   async requestDownload({ orderId, assetType }: DownloadAssetRequest): Promise<Blob> {
     if (env.useMockApi) {

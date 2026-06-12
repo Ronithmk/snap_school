@@ -103,9 +103,9 @@ export default function DashboardOrdersPage() {
             </TableHeader>
             <TableBody>
               {data.data.map((order) => (
-                <TableRow key={order.id} className="cursor-pointer">
+                <TableRow key={order.id} className="cursor-pointer" data-testid="order-row" data-order-status={order.status}>
                   <TableCell>
-                    <Link href={routes.dashboard.order(order.id)} className="font-medium text-sm hover:underline">
+                    <Link href={routes.dashboard.order(order.id)} className="font-medium text-sm hover:underline" data-testid="order-link">
                       {order.orderNumber}
                     </Link>
                   </TableCell>

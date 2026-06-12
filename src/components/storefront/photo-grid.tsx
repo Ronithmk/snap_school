@@ -96,7 +96,7 @@ function PhotoCard({ albumId, photo, priceList, onAddToCart }: PhotoCardProps) {
   }
 
   return (
-    <figure className="group relative aspect-square overflow-hidden rounded-lg bg-muted">
+    <figure className="group relative aspect-square overflow-hidden rounded-lg bg-muted" data-testid="photo-card" data-photo-id={photo.id}>
       <Image
         src={photo.thumbnailUrl}
         alt={photo.fileName}
@@ -131,7 +131,7 @@ function PhotoCard({ albumId, photo, priceList, onAddToCart }: PhotoCardProps) {
                 </option>
               ))}
             </Select>
-            <Button size="sm" className="h-8 w-full" onClick={handleAddToCart}>
+            <Button size="sm" className="h-8 w-full" data-testid="add-to-cart-button" onClick={handleAddToCart}>
               <ShoppingCart className="h-3.5 w-3.5" />
               Add to cart
             </Button>

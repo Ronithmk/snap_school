@@ -48,7 +48,7 @@ export function AdminLoginForm() {
     <form onSubmit={onSubmit} noValidate className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
-        <Input id="username" autoComplete="username" placeholder="platformadmin" {...register("username")} />
+        <Input id="username" data-testid="admin-login-username" autoComplete="username" placeholder="platformadmin" {...register("username")} />
         {errors.username ? <p className="text-sm text-destructive">{errors.username.message}</p> : null}
       </div>
 
@@ -57,6 +57,7 @@ export function AdminLoginForm() {
         <div className="relative">
           <Input
             id="password"
+            data-testid="admin-login-password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder="••••••••"
@@ -81,7 +82,7 @@ export function AdminLoginForm() {
         </p>
       ) : null}
 
-      <Button type="submit" className="w-full" disabled={platformLogin.isPending}>
+      <Button type="submit" data-testid="admin-login-submit" className="w-full" disabled={platformLogin.isPending}>
         {platformLogin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Sign in
       </Button>

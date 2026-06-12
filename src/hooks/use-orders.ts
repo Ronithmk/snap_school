@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersService, paymentsService } from "@/services";
 import { ORDERS_PAGE_SIZE } from "@/config/constants";
 import type { CreateOrderInput, DownloadAssetRequest, OrderListFilters, QueryParams, VerifyPaymentInput } from "@/types";
@@ -38,6 +38,19 @@ export function useOrder(orderId: string | undefined) {
     queryKey: ["order", orderId],
     queryFn: () => ordersService.getById(orderId!),
     enabled: !!orderId,
+  });
+}
+
+/** Cancels an order and refreshes the order detail, list, and analytics queries. */
+export function useCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => ordersService.cancel(orderId),
+    onSuccess: (order) => {
+      qc.setQueryData(["order", order.id], order);
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["analytics"] });
+    },
   });
 }
 
