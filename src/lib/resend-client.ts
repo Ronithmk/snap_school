@@ -29,6 +29,13 @@ export async function sendOrderConfirmationEmail(
   });
 }
 
+/** Sends a marketing campaign email to a batch of recipients. Returns false (no-op) if Resend isn't configured. */
+export async function sendCampaignEmail(to: string[], subject: string, html: string): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY || to.length === 0) return false;
+  await Promise.all(to.map((recipient) => resend.emails.send({ from: FROM, to: recipient, subject, html })));
+  return true;
+}
+
 export async function sendAccessCodeEmail(
   to: string,
   studentName: string,

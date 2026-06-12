@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   List,
+  Mail,
   Megaphone,
   Package,
   Palette,
@@ -62,6 +63,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: routes.dashboard.priceLists(), label: "Price Lists", icon: Tags, roles: ["platform_admin"] },
   { href: routes.dashboard.lab(), label: "Product Lab", icon: Wand2, roles: ["platform_admin"] },
   { href: routes.dashboard.support(), label: "Support", icon: LifeBuoy, roles: ["platform_admin"] },
+  { href: routes.dashboard.marketingEmails(), label: "Mailing List", icon: Mail, roles: ["platform_admin"] },
   { href: routes.dashboard.settings(), label: "Settings", icon: Settings },
 ];
 

@@ -62,6 +62,7 @@ export const routes = {
     labEditor: (productId: string) => `/dashboard/lab/editor/${productId}`,
     settings: () => "/dashboard/settings",
     support: () => "/dashboard/support",
+    marketingEmails: () => "/dashboard/marketing/emails",
   },
 
   storefront: {

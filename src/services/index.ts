@@ -12,3 +12,4 @@ export { contentService } from "./content.service";
 export { parentService } from "./parent.service";
 export { supportService } from "./support.service";
 export { cacheService } from "./cache.service";
+export { marketingService } from "./marketing.service";

@@ -9,15 +9,16 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(cuid())
-  name         String
-  email        String          @unique
-  password     String
-  role         String          @default("school_admin")
-  avatarUrl    String?
-  schoolAdmins SchoolAdmin[]
-  parentLinks  ParentStudent[]
-  createdAt    DateTime        @default(now())
+  id              String          @id @default(cuid())
+  name            String
+  email           String          @unique
+  password        String
+  role            String          @default("school_admin")
+  avatarUrl       String?
+  marketingOptOut Boolean         @default(false)
+  schoolAdmins    SchoolAdmin[]
+  parentLinks     ParentStudent[]
+  createdAt       DateTime        @default(now())
 }
 
 model SchoolAdmin {
@@ -274,4 +275,12 @@ model SupportTicket {
   message   String
   status    String   @default("open")
   createdAt DateTime @default(now())
+}
+
+model MarketingCampaign {
+  id             String   @id @default(cuid())
+  subject        String
+  body           String
+  recipientCount Int      @default(0)
+  createdAt      DateTime @default(now())
 }
