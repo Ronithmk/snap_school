@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Camera, Globe, MessageCircle, Share2 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -54,8 +55,7 @@ export function StorefrontHeader({ school }: TenantHeaderProps) {
       {/* Hero banner image (if configured on school) */}
       {school.bannerUrl && (
         <div className="relative h-40 overflow-hidden sm:h-56">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={school.bannerUrl} alt={school.name} className="h-full w-full object-cover" />
+          <Image src={school.bannerUrl} alt={school.name} fill sizes="100vw" priority className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
         </div>
       )}
@@ -73,8 +73,9 @@ export function StorefrontHeader({ school }: TenantHeaderProps) {
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link href={routes.storefront.school(school.slug)} className="flex min-w-0 items-center gap-2.5">
             {school.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={school.logoUrl} alt={school.name} className="h-9 max-w-[140px] shrink-0 object-contain" />
+              <div className="relative h-9 w-[140px] shrink-0">
+                <Image src={school.logoUrl} alt={school.name} fill sizes="140px" className="object-contain object-left" />
+              </div>
             ) : (
               <Avatar src={undefined} alt={school.name} fallback={school.name.slice(0, 2).toUpperCase()} className="h-9 w-9 shrink-0" />
             )}

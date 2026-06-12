@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Minus, Plus, Search, ShoppingCart } from "lucide-react";
@@ -129,9 +130,9 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
   }
 
   return (
-    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
+    <div className="flex flex-col lg:h-[calc(100svh-64px)] lg:flex-row lg:overflow-hidden">
       {/* ── Left thumbnail strip ── */}
-      <aside className="hidden w-[88px] flex-shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-background p-1.5 sm:flex">
+      <aside className="hidden w-[88px] flex-shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-background p-1.5 lg:flex">
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-1 pt-6 text-center">
             <ShoppingCart className="h-5 w-5 text-muted-foreground/30" />
@@ -150,16 +151,11 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
                   selectedItemId === item.id && "ring-2 ring-primary/60 bg-primary/5",
                 )}
               >
-                <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
+                <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
                   {mockup ? (
                     <ProductMockup layout={mockup.layout} photoUrl={mockupPhotoUrl} className="h-full" />
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.previewImageUrl || mockupPhotoUrl}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <Image src={item.previewImageUrl || mockupPhotoUrl} alt={item.name} fill sizes="88px" className="object-cover" />
                   )}
                 </div>
                 <span className="line-clamp-2 text-[9px] leading-tight text-muted-foreground">{item.name}</span>
@@ -170,7 +166,7 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
       </aside>
 
       {/* ── Center product preview ── */}
-      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-100 pt-10 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 lg:pt-0">
         <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
         {/* Breadcrumb */}
@@ -192,14 +188,14 @@ export default function AlbumGalleryPage({ params }: AlbumGalleryPageProps) {
       </main>
 
       {/* ── Right price list panel ── */}
-      <aside className="flex w-[272px] flex-shrink-0 flex-col border-l border-border bg-background">
+      <aside className="flex w-full flex-col border-t border-border bg-background lg:w-[272px] lg:flex-shrink-0 lg:border-l lg:border-t-0">
         {/* Header */}
         <div className="border-b border-border px-4 py-3">
           <p className="text-sm font-semibold tracking-tight">Products &amp; prints</p>
           <p className="text-xs text-muted-foreground">Pick what you&apos;d like for {album.title}</p>
         </div>
         {/* Scrollable item rows */}
-        <div className="flex-1 divide-y divide-border overflow-y-auto">
+        <div className="divide-y divide-border lg:flex-1 lg:overflow-y-auto">
           {priceList.items.map((item) => {
             const qty = getItemQty(item.id);
             const isSelected = item.id === selectedItemId;
@@ -312,7 +308,7 @@ function ProductPreview({
   const mockup = item.productType ? PRODUCT_MOCKUP_BY_TYPE.get(item.productType) : undefined;
 
   return (
-    <div className="flex max-w-2xl flex-col items-center gap-5 px-8 py-6 text-center">
+    <div className="flex max-w-2xl flex-col items-center gap-5 px-4 py-6 text-center sm:px-8">
       {/* Mockup image */}
       <div
         data-protected
@@ -350,18 +346,18 @@ function ProductPreview({
 
 function LoadingSkeleton() {
   return (
-    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
-      <div className="hidden w-[88px] border-r bg-background p-1.5 sm:block">
+    <div className="flex flex-col lg:h-[calc(100svh-64px)] lg:flex-row lg:overflow-hidden">
+      <div className="hidden w-[88px] border-r bg-background p-1.5 lg:block">
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="aspect-square w-full rounded-md" />
           ))}
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center bg-neutral-100 dark:bg-neutral-900">
-        <Skeleton className="h-[50vh] w-[36vw] rounded-lg" />
+      <div className="flex flex-1 items-center justify-center bg-neutral-100 py-10 dark:bg-neutral-900 lg:py-0">
+        <Skeleton className="h-[40vh] w-[80vw] rounded-lg lg:h-[50vh] lg:w-[36vw]" />
       </div>
-      <div className="w-[272px] border-l bg-background">
+      <div className="w-full border-t bg-background lg:w-[272px] lg:border-l lg:border-t-0">
         <div className="divide-y">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-3 py-3">

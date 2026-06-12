@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
@@ -74,26 +75,31 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
           <div className="space-y-3 lg:col-span-2">
             {cart.items.map((item) => (
               <Card key={item.id} className="border-border/60 transition-shadow hover:shadow-sm">
-                <CardContent className="flex items-center gap-4 p-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.thumbnailUrl} alt={item.name} className="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-border" />
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="truncate text-sm font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">{formatCurrency(item.unitPrice, currencyCode)} each</p>
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                  <div className="flex items-center gap-3 sm:flex-1 sm:gap-4">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+                      <Image src={item.thumbnailUrl} alt={item.name} fill sizes="64px" className="object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="truncate text-sm font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(item.unitPrice, currencyCode)} each</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 p-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">
-                      <Minus className="h-3.5 w-3.5" />
-                    </Button>
-                    <span className="w-6 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">
-                      <Plus className="h-3.5 w-3.5" />
+                  <div className="flex items-center justify-between gap-3 sm:justify-end sm:gap-4">
+                    <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 p-0.5">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <p className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.unitPrice * item.quantity, currencyCode)}</p>
+                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} aria-label="Remove item">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.unitPrice * item.quantity, currencyCode)}</p>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} aria-label="Remove item">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </CardContent>
               </Card>
             ))}

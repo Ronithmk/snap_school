@@ -480,21 +480,13 @@ export default function DashboardPriceListsPage() {
                                   </span>
                                 </td>
 
-                                {/* Name + description + preview */}
+                                {/* Name + description */}
                                 <td className="px-3 py-3">
                                   <p className="font-medium leading-snug">{item.name}</p>
                                   {item.description && (
                                     <p className="mt-0.5 text-xs text-muted-foreground">
                                       {item.description}
                                     </p>
-                                  )}
-                                  {item.previewImageUrl && (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      src={item.previewImageUrl}
-                                      alt={item.name}
-                                      className="mt-1.5 h-9 w-9 rounded border border-border object-cover"
-                                    />
                                   )}
                                 </td>
 

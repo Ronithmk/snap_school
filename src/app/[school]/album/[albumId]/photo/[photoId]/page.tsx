@@ -104,9 +104,9 @@ export default function PhotoStorefrontPage({ params }: PhotoStorefrontPageProps
   }
 
   return (
-    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
+    <div className="flex flex-col lg:h-[calc(100svh-64px)] lg:flex-row lg:overflow-hidden">
       {/* ── Center photo preview ── */}
-      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-neutral-100 pt-10 dark:bg-neutral-900 lg:pt-0">
         <nav className="absolute left-4 top-3 flex items-center gap-1 text-xs text-neutral-500">
           <Link href={routes.storefront.school(schoolSlug)} className="hover:text-foreground transition-colors">
             {school.name}
@@ -123,11 +123,11 @@ export default function PhotoStorefrontPage({ params }: PhotoStorefrontPageProps
       </main>
 
       {/* ── Right price list panel ── */}
-      <aside className="flex w-[272px] flex-shrink-0 flex-col border-l border-border bg-background">
+      <aside className="flex w-full flex-col border-t border-border bg-background lg:w-[272px] lg:flex-shrink-0 lg:border-l lg:border-t-0">
         <div className="border-b border-border p-3">
           <p className="text-xs font-medium text-muted-foreground">Products for this photo</p>
         </div>
-        <div className="flex-1 divide-y divide-border overflow-y-auto">
+        <div className="divide-y divide-border lg:flex-1 lg:overflow-y-auto">
           {items.map((item) => {
             const qty = getItemQty(item.id);
             const isSelected = item.id === selectedItemId;
@@ -216,7 +216,7 @@ function PhotoPreview({
   watermark?: import("@/types/tenant").WatermarkSettings;
 }) {
   return (
-    <div className="flex max-w-2xl flex-col items-center gap-5 px-8 py-6 text-center">
+    <div className="flex max-w-2xl flex-col items-center gap-5 px-4 py-6 text-center sm:px-8">
       <div data-protected className="relative w-full max-w-[480px] overflow-hidden rounded-lg shadow-2xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -246,11 +246,11 @@ function PhotoPreview({
 
 function LoadingSkeleton() {
   return (
-    <div className="flex h-[calc(100svh-64px)] overflow-hidden">
-      <div className="flex flex-1 items-center justify-center bg-neutral-100 dark:bg-neutral-900">
-        <Skeleton className="h-[50vh] w-[36vw] rounded-lg" />
+    <div className="flex flex-col lg:h-[calc(100svh-64px)] lg:flex-row lg:overflow-hidden">
+      <div className="flex flex-1 items-center justify-center bg-neutral-100 py-10 dark:bg-neutral-900 lg:py-0">
+        <Skeleton className="h-[40vh] w-[80vw] rounded-lg lg:h-[50vh] lg:w-[36vw]" />
       </div>
-      <div className="w-[272px] border-l bg-background">
+      <div className="w-full border-t bg-background lg:w-[272px] lg:border-l lg:border-t-0">
         <div className="divide-y">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-3 py-3">

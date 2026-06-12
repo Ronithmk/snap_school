@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -73,13 +74,14 @@ export default function ParentLandingPage({ params }: ParentLandingPageProps) {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {groupPhotos.map((photo) => (
               <div key={photo.id} className="space-y-2">
-                <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+                  <Image
                     src={photo.thumbnailUrl}
                     alt={photo.fileName}
+                    fill
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    className="object-cover"
                   />
                 </div>
                 <Link
