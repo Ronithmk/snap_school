@@ -4,7 +4,7 @@ import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ChevronRight, Minus, Plus, RotateCcw, ShieldCheck, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
+    <div className="bg-gradient-luxury mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href={routes.storefront.school(schoolSlug)} className="transition-colors hover:text-foreground">
           {school.name}
@@ -73,11 +73,14 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-3 lg:col-span-2">
-            {cart.items.map((item) => (
-              <Card key={item.id} className="border-border/60 transition-shadow hover:shadow-sm">
+            {cart.items.map((item, i) => (
+              <Card
+                key={item.id}
+                className={`glass-premium animate-fade-up rounded-2xl delay-${Math.min(i, 4) * 75}`}
+              >
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex items-center gap-3 sm:flex-1 sm:gap-4">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-border">
                       <Image src={item.thumbnailUrl} alt={item.name} fill sizes="64px" className="object-cover" />
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
@@ -106,7 +109,7 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
           </div>
 
           <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-            <Card className="border-border/60 shadow-sm">
+            <Card className="glass-premium rounded-2xl">
               <CardContent className="space-y-4 p-5">
                 <p className="text-sm font-semibold tracking-tight">Order summary</p>
                 <CouponField
@@ -115,14 +118,29 @@ export default function AlbumCartPage({ params }: AlbumCartPageProps) {
                   onRemove={removeCoupon}
                 />
                 {totals ? <OrderSummary totals={totals} currencyCode={currencyCode} taxLabel={school.settings.tax.label || "Tax"} /> : null}
-                <Button className="w-full shadow-sm shadow-primary/20" size="lg" onClick={() => router.push(routes.storefront.checkout(schoolSlug, albumId))}>
+                <Button className="w-full" size="lg" onClick={() => router.push(routes.storefront.checkout(schoolSlug, albumId))}>
                   Proceed to checkout
                 </Button>
               </CardContent>
             </Card>
+
+            <div className="grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
+              <TrustBadge icon={ShieldCheck} label="Secure checkout" />
+              <TrustBadge icon={Truck} label="Fast delivery" />
+              <TrustBadge icon={RotateCcw} label="Easy reorders" />
+            </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TrustBadge({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <div className="glass-premium flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3">
+      <Icon className="h-4 w-4 text-primary" />
+      <span className="leading-tight">{label}</span>
     </div>
   );
 }

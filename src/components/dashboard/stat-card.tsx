@@ -15,7 +15,7 @@ export function StatCard({ label, value, icon: Icon, changePercent }: StatCardPr
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <Card>
+    <Card className="glass-premium rounded-2xl">
       <CardContent className="flex items-start justify-between gap-4 p-5">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">{label}</p>
@@ -27,7 +27,7 @@ export function StatCard({ label, value, icon: Icon, changePercent }: StatCardPr
             </p>
           )}
         </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-foreground/5 text-muted-foreground">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white shadow-glow">
           <Icon className="h-4.5 w-4.5" />
         </span>
       </CardContent>

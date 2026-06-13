@@ -93,8 +93,8 @@ function NavLink({
         "flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-150",
         indent && "ml-3 text-xs",
         isActive
-          ? "bg-foreground text-background shadow-[0_1px_4px_oklch(0_0_0/20%)]"
-          : "text-muted-foreground hover:bg-foreground/6 hover:text-foreground",
+          ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_4px_14px_-4px_oklch(0.5_0.1_290/45%)]"
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
       )}
     >
       <Icon className={cn("shrink-0", indent ? "h-3.5 w-3.5" : "h-4 w-4")} />

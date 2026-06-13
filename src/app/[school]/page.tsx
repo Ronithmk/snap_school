@@ -273,24 +273,24 @@ export default function TenantHomePage({ params }: TenantHomePageProps) {
       {announcements.map((b) => <AnnouncementBar key={b.id} block={b} />)}
 
       <div
-        className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"
-        style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}26, ${primaryColor}08, transparent)` } : undefined}
+        className="bg-gradient-hero relative overflow-hidden text-white"
+        style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}cc)` } : undefined}
       >
-        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/4 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="blob -right-16 -top-24 h-72 w-72 bg-white/15" />
+        <div aria-hidden className="blob -bottom-32 left-1/4 h-80 w-80 bg-white/10" />
         <div className="relative mx-auto max-w-6xl px-4 py-12 text-center sm:px-6 sm:py-16">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-background/60 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
             <Sparkles className="h-3.5 w-3.5" />
             Photo gallery & store
           </span>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{school.name}</h1>
-          <p className="mx-auto mt-2 max-w-xl text-muted-foreground sm:text-lg">
+          <p className="mx-auto mt-2 max-w-xl text-white/85 sm:text-lg">
             {school.description ?? "View and order your child's school photos."}
           </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="bg-gradient-luxury mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12">
         {/* Hero banners */}
         {banners.length > 0 && (
           <div className="space-y-4">

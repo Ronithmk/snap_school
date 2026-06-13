@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontFooter, StorefrontHeader } from "@/components/storefront/storefront-chrome";
 import { ScreenshotGuard } from "@/components/storefront/screenshot-guard";
+import { ScenicBackground } from "@/components/shared/scenic-background";
 import { db } from "@/lib/db";
 import { formatDbSchool } from "@/lib/format-school";
 
@@ -39,7 +40,10 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     <div className="flex min-h-svh flex-col">
       <ScreenshotGuard />
       <StorefrontHeader school={school} />
-      <main className="flex-1">{children}</main>
+      <main className="relative flex-1 overflow-hidden">
+        <ScenicBackground />
+        <div className="relative z-10">{children}</div>
+      </main>
       <StorefrontFooter school={school} />
     </div>
   );

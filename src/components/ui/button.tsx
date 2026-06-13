@@ -8,7 +8,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "rounded-xl bg-primary text-primary-foreground shadow-[0_1px_3px_oklch(0_0_0/20%),0_4px_12px_oklch(0_0_0/15%)] hover:bg-primary/88 hover:shadow-[0_2px_8px_oklch(0_0_0/30%)]",
+          "rounded-xl text-primary-foreground bg-[image:var(--gradient-primary)] shadow-[0_6px_20px_-6px_oklch(0.5_0.1_290/50%)] hover:shadow-[0_10px_28px_-6px_oklch(0.5_0.1_290/60%)] hover:brightness-[1.04]",
         secondary:
           "rounded-xl border border-border bg-secondary text-secondary-foreground backdrop-blur-sm hover:bg-accent hover:text-accent-foreground",
         outline:
@@ -24,7 +24,7 @@ export const buttonVariants = cva(
       size: {
         default:  "h-10 px-4 py-2",
         sm:       "h-8 rounded-lg px-3 text-xs",
-        lg:       "h-12 rounded-xl px-6 text-base",
+        lg:       "h-12 rounded-2xl px-6 text-base",
         icon:     "h-10 w-10 rounded-xl",
         "icon-sm":"h-8 w-8 rounded-lg",
       },
